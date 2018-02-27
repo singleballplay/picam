@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# setup required packages
+sudo apt update
+sudo apt install -y \
+    vim \
+    python3-gi \
+    gir1.2-gst-rtsp-server-1.0 \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-tools \
+    gstreamer1.0-omx
+
+# ensure v4l2 can load the pi camera
+echo 'bcm2835-v4l2' | sudo tee /etc/modules-load.d/pi_camera_module.conf
+
+# put the rtsp server script in /opt
+sudo cp picam.py /opt/picam.py
+
+# load the picamera/webcam rtsp service
+sudo cp picam.service /lib/systemd/system/picam.service
+sudo systemctl daemon-reload
+
+# run the service on startup
+sudo systemctl enable picam.service
