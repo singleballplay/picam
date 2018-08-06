@@ -1,0 +1,30 @@
+---
+video_devices:
+    SERIAL1:
+        type: C920
+        endpoint: /playfield
+        resolution: 1280x720
+        framerate: 30
+        encoding: h264
+    SERIAL2:
+        type: C920
+        endpoint: /backglass
+        resolution: 1280x720
+        framerate: 30
+        encoding: h264
+    SERIAL3:
+        type: C922
+        endpoint: /playfield-alt
+        resolution: 1280x720
+        framerate: 60
+        encoding: mjpeg
+audio_devices:
+    SNOWBALL:
+        type: snowball
+        endpoint: /snowball-audio
+    SERIAL1:
+        type: C920
+        endpoint: /playfield-audio
+    SERIAL2:
+        type: C920
+        endpoint: /backglass-audio

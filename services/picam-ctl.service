@@ -1,0 +1,12 @@
+[Unit]
+Description=RTSP Webcam Controls
+Wants=network-online.target
+After=multi-user.target network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/picam-ctl/app.py
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

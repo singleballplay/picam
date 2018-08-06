@@ -5,6 +5,8 @@ sudo apt update
 sudo apt install -y \
     vim \
     python3-gi \
+    python3-flask \
+    python3-yaml \
     gir1.2-gst-rtsp-server-1.0 \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
@@ -18,9 +20,24 @@ echo 'bcm2835-v4l2' | sudo tee /etc/modules-load.d/pi_camera_module.conf
 # put the rtsp server script in /opt
 sudo cp picam.py /opt/picam.py
 
+# copy over configuration
+if [ -f 'picam.yaml' ]; then
+    sudo cp picam.yaml /opt/picam.yaml
+fi
+
 # load the picamera/webcam rtsp service
-sudo cp picam.service /lib/systemd/system/picam.service
+sudo cp services/picam.service /lib/systemd/system/picam.service
 sudo systemctl daemon-reload
 
 # run the service on startup
 sudo systemctl enable picam.service
+
+# copy over the picam-ctl service code
+sudo cp -r picam-ctl/ /opt/
+
+# load the webcam control service
+sudo cp services/picam-ctl.service /lib/systemd/system/picam-ctl.service
+sudo systemctl daemon-reload
+
+# run the service on startup
+sudo systemctl enable picam-ctl.service

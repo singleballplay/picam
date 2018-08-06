@@ -2,7 +2,8 @@
 
 Grab the latest Raspbian "lite" image from https://www.raspberrypi.org/downloads/raspbian/. At the momemnt the current version is 2017-11-29-raspbian-stretch-lite.zip. Unzip it locally so you have access to the .img file. Follow the instructions to format the disk with the image so you have a fresh operating system.
 
-Remount the micro sd card and make the following changes:
+Remount the micro sd card and make the following changes (your path may be different to the boot and rootfs directories):
+
 - Create an empty ssh file in the boot partition to enable ssh access to the pi. You should see two paritions rootfs and boot.
 
     ```
@@ -45,25 +46,37 @@ That's it for the basic Raspbian setup you'll need. You might also want too chan
 
 Download the latest version of the code here: https://gitlab.com/singleballplay/picam.
 
-Unzip the archive and navigate to the project directory. Run the setup script and you should be good to go. It will probably take a bit to upgrade everything so be patient. Reboot afterwards and you should have the stream(s) available to test.
+Unzip the archive and navigate to the project directory. There is a picam.yaml.example file to add your configuration to. Replace the spots for the serial numbers with the serials numbers for your camera(s) (directions below).
+
+Run the setup script and you should be good to go. It will probably take a bit to upgrade everything so be patient. Reboot afterwards and you should have the stream(s) available to test.
 
     $ ./setup
     $ sudo shutdown -r now
 
+## Listing Video Devices
+
+To list all of the video devices run the following command and grab the /dev/video0 or other path and enter it in the next command to find the serial number for each camera you want to use.
+
+    $ v4l2-ctl --list-devices
+
+## Finding Webcam Serial
+
+To find the serial number for your video device, run the following command with the path to the device you want to find information about. Unfortunately there's no good way to know which one is which if you have multiple of the same camera so do this for each one and then adjust the configuration endpoint after you know which one is which.
+
+    $ /bin/udevadm info --name=/dev/video0 | grep SERIAL_SHORT
+
+Add that to the configuration file and edit the endpoint if you want something else. Make sure it starts with a / and doesn't have any spaces in it.
+
 ## Accessing The Stream
 
-You should be good to go now. The service will run after the device powers up and use whatever cameras are available and should be accessible by the appropriate uri: rtsp://hostname:8554/picam or rtsp://hostname:8554/c920-1 (2,3,4 if you have multiple C920s).
+You should be good to go now. The service will run after the device powers up and use whatever cameras are available and should be accessible by the appropriate uri: rtsp://hostname:8554/playfield or rtsp://hostname:8554/backglass, etc. based on how you configured them.
 
 To test the stream on another computer you can run the following gstreamer pipeline and it should display the video:
 
-    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/c920-1 latency=0 ! rtph264depay ! avdec_h264 ! autovideosink
+    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=0 ! rtph264depay ! avdec_h264 ! autovideosink
+
+To add them as sources in OBS, add a new 'Media Source' and uncheck all of the boxes. Then, in the 'Input' field enter the rtsp uri for the webcam and in the 'Input Format' box enter flv_live.
 
 ## Adjusting Camera Settings
 
-**In Progress not yet actually available for use**
-
-If you want to change any of the default settings you can edit the picam.py file in the /opt directory. These can also be done after the camera are in use by using the APIs available at http://hostname:8080/settings.
-
-    $ curl -XPOST -d '{"setting": "brightness", "value": "50"}' http://hostname:8080/settings
-
-Unfortunately the settings are camera specific and don't exactly work the same way between the C920 and the Pi Camera Module so this is a bit of a manual process.
+If you want to change any of the default settings you can edit the picam.py file in the /opt directory. These can also be done after the cameras are in use by visiting a web page on the device at http://hostname:5000/.
