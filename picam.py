@@ -14,6 +14,22 @@ mainloop = GObject.MainLoop()
 server = GstRtspServer.RTSPServer()
 mounts = server.get_mount_points()
 
+def adjust_video_settings(device, settings):
+    """
+    Adjusts the settings for a given webcam
+
+    Args:
+        device: the v4l2 device e.g. /dev/video0
+        settings: the controls to change
+    """
+    result = subprocess.run([
+        'v4l2-ctl',
+        '-d', device,
+        '-c', settings
+    ])
+    if result.returncode != 0:
+        logging.error('non-zero return code changing webcam settings')
+
 def find_audio_devices():
     cmd1 = subprocess.run(('cat', '/proc/asound/cards'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     device_list = cmd1.stdout.decode().strip().split('\n')
@@ -87,12 +103,12 @@ for video_device, description in find_video_devices():
             'focus_absolute=0',
             'exposure_auto_priority=0',
             'exposure_auto=1',
-            'exposure_absolute=200',
+            'exposure_absolute=100',
             'brightness=128',
             'contrast=128',
             'saturation=128',
             'sharpness=128',
-            'gain=160',
+            'gain=96',
             'backlight_compensation=0',
             'white_balance_temperature_auto=0',
             'white_balance_temperature=4400',
@@ -100,12 +116,13 @@ for video_device, description in find_video_devices():
             'tilt_absolute=0',
             'zoom_absolute=100'
         ])
-        launch = 'v4l2src device={} extra-controls="c,{}"'.format(video_device, camera_settings)
+        adjust_video_settings(video_device, camera_settings)
+        launch = 'v4l2src device={}'.format(video_device)
         framerate = config_options.get('framerate', '30')
         width, height = config_options.get('resolution', '1280x720').split('x')
         video_format = (
-            "h264parse config-interval=2 "
-            "! video/x-h264,width={},height={},framerate={}/1,profile=high "
+            "video/x-h264,width={},height={},framerate={}/1,profile=high "
+            "! h264parse config-interval=2 "
             "! rtph264pay name=pay0 pt=96"
         ).format(width, height, framerate)
         if config_options['type'] == 'C922':
