@@ -1,17 +1,26 @@
 ---
 video_devices:
-    SERIAL1:
-        type: C920
+    'SERIAL1':
+        type: BRIO
         endpoint: /playfield
         resolution: 1280x720
-        framerate: 30
-        encoding: h264
+        framerate: 60
+        encoding: mjpeg
+        v4l2:
+            exposure_absolute: 150
+            gain: 32
+            white_balance_temperature: 4400
+            sharpness: 0
     SERIAL2:
         type: C920
         endpoint: /backglass
-        resolution: 1280x720
+        resolution: 1920x1080
         framerate: 30
         encoding: h264
+        v4l2:
+            exposure_absolute: 300
+            gain: 16
+            white_balance_temperature: 4400
     SERIAL3:
         type: C922
         endpoint: /playfield-alt

@@ -45,6 +45,8 @@ main {
 }
 .video-settings {
     padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
 }
 .video-control {
     padding-top: 5px;
@@ -64,8 +66,8 @@ main {
 
         <main>
             {% for video_device, device_settings in video_devices.items() %}
+            <h2>{{ device_settings['path'] }}</h2>
             <div id="{{ video_device }}" class="video-settings">
-                <h2>{{ device_settings['path'] }}</h2>
                 <div class="video-control">
                     <label for="{{ video_device }}-gain">Gain</label>
                     <input type="number" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-gain" id="{{ video_device }}-gain" onchange="updateValue(this, '{{ video_device }}-range');" />
@@ -141,10 +143,10 @@ main {
                     <input type="number" min="100" max="500" value="{{ device_settings['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute" id="{{ video_device }}-zoom_absolute" onchange="updateValue(this, '{{ video_device }}-zoom_absolute-range')" />
                     <input type="range" min="100" max="500" value="{{ device_settings['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute-range" id="{{ video_device }}-zoom_absolute-range" oninput="updateValue(this, '{{ video_device }}-zoom_absolute')" />
                 </div>
-                <div>
-                    <button name="update" onclick="updateSettings('{{ video_device }}')">Update</button>
-                </div>
             </div>
+        <div>
+            <button name="update" onclick="updateSettings('{{ video_device }}')">Update</button>
+        </div>
             {% endfor %}
         </main>
 

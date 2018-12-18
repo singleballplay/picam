@@ -91,49 +91,94 @@ for video_device, description in find_video_devices():
         factory.set_launch(pipeline)
         factory.set_shared(True)
         mounts.add_factory('/picam', factory)
-    elif 'C920' in description or 'C922' in description:
-        serial = find_serial(video_device)
-        if serial in settings['video_devices']:
+    elif 'Cam Link' in description:
+        if 'CAMLINK' in settings['video_devices']:
+            config_options = settings['video_devices']['CAMLINK']
+        else:
+            logging.info('camlink not configured')
+            continue
+        launch = 'v4l2src do-timestamp=true device={}'.format(video_device)
+        framerate = config_options.get('framerate', '60')
+        width, height = config_options.get('resolution', '1280x720').split('x')
+        video_format = (
+            "video/x-raw,width={},height={} "
+            "! videoscale ! video/x-raw,width=1024,height=576 "
+            "! x264enc speed-preset=superfast tune=zerolatency bitrate=5600 key-int-max=120 "
+            "! h264parse config-interval=2 "
+            "! rtph264pay name=pay0 pt=96"
+        ).format(width, height, framerate)
+        pipeline = '( {} ! {} )'.format(launch, video_format)
+        factory = GstRtspServer.RTSPMediaFactory()
+        factory.set_launch(pipeline)
+        factory.set_shared(True)
+        camera_path = config_options['endpoint']
+        mounts.add_factory(camera_path, factory)
+    elif 'C920' in description or 'C922' in description or 'BRIO' in description:
+        serial = str(find_serial(video_device))
+        if serial in settings['video_devices'].keys():
             config_options = settings['video_devices'][serial]
         else:
             logging.info('unknown camera')
             continue
-        camera_settings = ','.join([
-            'focus_auto=0',
-            'focus_absolute=0',
-            'exposure_auto_priority=0',
-            'exposure_auto=1',
-            'exposure_absolute=100',
-            'brightness=128',
-            'contrast=128',
-            'saturation=128',
-            'sharpness=128',
-            'gain=96',
-            'backlight_compensation=0',
-            'white_balance_temperature_auto=0',
-            'white_balance_temperature=4400',
-            'pan_absolute=0',
-            'tilt_absolute=0',
-            'zoom_absolute=100'
-        ])
-        adjust_video_settings(video_device, camera_settings)
+        v4l2_options = {
+            'focus_auto': 0,
+            'focus_absolute': 0,
+            'exposure_auto_priority': 0,
+            'exposure_auto': 1,
+            'exposure_absolute': 100,
+            'brightness': 128,
+            'contrast': 128,
+            'saturation': 128,
+            'sharpness': 128,
+            'gain': 96,
+            'backlight_compensation': 0,
+            'white_balance_temperature_auto': 0,
+            'white_balance_temperature': 4400,
+            'pan_absolute': 0,
+            'tilt_absolute': 0,
+            'zoom_absolute': 100
+        }
+        if 'v4l2' in config_options.keys():
+            for k, v in config_options['v4l2'].items():
+                v4l2_options.update({k: v})
+        camera_settings = ','.join(['{}={}'.format(k, v) for k, v in v4l2_options.items()])
+        # tried setting them all at once, but that seems to fail often
+        for k, v in v4l2_options.items():
+            adjust_video_settings(video_device, '{}={}'.format(k, v))
         launch = 'v4l2src device={}'.format(video_device)
         framerate = config_options.get('framerate', '30')
         width, height = config_options.get('resolution', '1280x720').split('x')
         video_format = (
             "video/x-h264,width={},height={},framerate={}/1,profile=high "
             "! h264parse config-interval=2 "
-            "! rtph264pay name=pay0 pt=96"
+            "! rtph264pay name=pay0 pt=96 "
         ).format(width, height, framerate)
-        if config_options['type'] == 'C922':
-            keyframe_interval = int(framerate) * 2
+        if config_options['type'] in ['C922', 'BRIO']:
+            if config_options['encoding'] == 'h264':
+                keyframe_interval = 2 * framerate
+                video_format = (
+                    "image/jpeg,width={},height={},framerate={}/1 "
+                    "! jpegdec "
+                    "! videoscale ! video/x-raw,width=1024,height=576 "
+                    "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={} "
+                    "! video/x-h264,profile=high "
+                    "! h264parse config-interval=2 "
+                    "! rtph264pay name=pay0 pt=96 "
+                ).format(width, height, framerate, keyframe_interval)
+            if config_options['encoding'] == 'vp8':
+                keyframe_interval = 2 * framerate
+                video_format = (
+                    "image/jpeg,width={},height={},framerate={}/1 "
+                    "! jpegdec "
+                    "! videoscale ! video/x-raw,width=1024,height=576 "
+                    "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={} target-bitrate=4000000 "
+                    "! rtpvp8pay name=pay0 pt=96 "
+                ).format(width, height, framerate, keyframe_interval)
+        if config_options['encoding'] == 'mjpeg':
             video_format = (
                 "image/jpeg,width={},height={},framerate={}/1 "
-                "! jpegdec "
-                "! x264enc key-int-max={} bframes=2 threads=4 bitrate=4000 tune=zerolatency speed-preset=ultrafast "
-                "! h264parse config-interval=2 "
-                "! rtph264pay name=pay0 pt=96"
-            ).format(width, height, framerate, keyframe_interval)
+                "! rtpjpegpay name=pay0 pt=26 "
+            ).format(width, height, framerate)
         pipeline = '( {} ! {} )'.format(launch, video_format)
         factory = GstRtspServer.RTSPMediaFactory()
         factory.set_launch(pipeline)
@@ -159,7 +204,7 @@ for alsa_idx, description in find_audio_devices():
         audio_path = '/snowball-audio'
     else:
         continue
-    launch = 'alsasrc device=hw:{} ! voaacenc ! rtpmp4apay name=pay0 pt=96'.format(alsa_idx)
+    launch = 'alsasrc device=hw:{} ! queue ! voaacenc ! rtpmp4apay name=pay0 pt=96'.format(alsa_idx)
     pipeline = '( {} )'.format(launch)
     factory = GstRtspServer.RTSPMediaFactory()
     factory.set_launch(pipeline)
