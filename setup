@@ -12,10 +12,28 @@ sudo apt install -y \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-tools \
-    gstreamer1.0-omx
+    gstreamer1.0-alsa \
+    gstreamer1.0-omx \
+    ntp \
+    ntpdate
 
-# ensure v4l2 can load the pi camera
-echo 'bcm2835-v4l2' | sudo tee /etc/modules-load.d/pi_camera_module.conf
+if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
+    # ensure v4l2 can load the pi camera
+    echo 'bcm2835-v4l2' | sudo tee /etc/modules-load.d/pi_camera_module.conf
+
+    if [ "$(grep iwconfig /etc/rc.local)" == "" ]; then
+        # disable wlan0 power management for better latency
+        sudo sed -i '$iiwconfig wlan0 power off' /etc/rc.local
+    fi
+
+    if [ "$(grep tvservice /etc/rc.local)" == "" ]; then
+        # turn off power to hdmi to save a bit of power
+        sudo sed -i '$itvservice -o' /etc/rc.local
+    fi
+
+    # crank up cpu freq
+    #sudo sh -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+fi
 
 # put the rtsp server script in /opt
 sudo cp picam.py /opt/picam.py
