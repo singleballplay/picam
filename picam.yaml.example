@@ -10,8 +10,7 @@ video_devices:
             exposure_absolute: 150
             gain: 32
             white_balance_temperature: 4400
-            sharpness: 0
-    SERIAL2:
+    'SERIAL2':
         type: C920
         endpoint: /backglass
         resolution: 1920x1080
@@ -21,19 +20,19 @@ video_devices:
             exposure_absolute: 300
             gain: 16
             white_balance_temperature: 4400
-    SERIAL3:
+    'SERIAL3':
         type: C922
-        endpoint: /playfield-alt
+        endpoint: /player
         resolution: 1280x720
         framerate: 60
         encoding: mjpeg
 audio_devices:
-    SNOWBALL:
+    'SNOWBALL':
         type: snowball
         endpoint: /snowball-audio
-    SERIAL1:
-        type: C920
+    'SERIAL1':
+        type: BRIO
         endpoint: /playfield-audio
-    SERIAL2:
+    'SERIAL2':
         type: C920
         endpoint: /backglass-audio
