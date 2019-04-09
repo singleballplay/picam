@@ -39,19 +39,28 @@ header {
     border-bottom: 1px solid #ccc;
     text-align: center;
 }
+
 main {
     padding-top: 10px;
     padding-bottom: 10px;
 }
+
+.video-device {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
 .video-settings {
     padding: 10px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
 }
+
 .video-control {
     padding-top: 5px;
     padding-bottom: 5px;
 }
+
 .video-control label {
     font-weight: bold;
     display: block;
@@ -66,87 +75,104 @@ main {
 
         <main>
             {% for video_device, device_settings in video_devices.items() %}
-            <h2>{{ device_settings['path'] }}</h2>
-            <div id="{{ video_device }}" class="video-settings">
-                <div class="video-control">
-                    <label for="{{ video_device }}-gain">Gain</label>
-                    <input type="number" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-gain" id="{{ video_device }}-gain" onchange="updateValue(this, '{{ video_device }}-range');" />
-                    <input type="range" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-range" id="{{ video_device }}-range" oninput="updateValue(this, '{{ video_device }}-gain');" />
+            <div class="video-device">
+                <h2>{{ device_settings['path'] }}</h2>
+                <div id="{{ video_device }}" class="video-settings">
+                    <div class="video-control">
+                        <label for="{{ video_device }}-gain">Gain</label>
+                        <input type="number" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-gain" id="{{ video_device }}-gain" onchange="updateValue(this, '{{ video_device }}-range');" />
+                        <input type="range" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-range" id="{{ video_device }}-range" oninput="updateValue(this, '{{ video_device }}-gain');" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-white_balance_temperature_auto">White Balance Auto</label>
+                        <input type="checkbox" name="{{ video_device }}-white_balance_temperature_auto" {{ 'checked' if device_settings['white_balance_temperature_auto'] == '1' else '' }} id="{{ video_device }}-white_balance_temperature_auto"/>
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-white_balance_temperature">White Balance Temperature</label>
+                        <input type="number" min="2000" max="6500" step="100" value="{{ device_settings['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature" id="{{ video_device }}-white_balance_temperature" onchange="updateValue(this, '{{ video_device }}-white_balance_temperature-range')" />
+                        <input type="range" min="2000" max="6500" step="100" value="{{ device_settings['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature-range" id="{{ video_device }}-white_balance_temperature-range" oninput="updateValue(this, '{{ video_device }}-white_balance_temperature')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-exposure_auto">Exposure Auto</label>
+                        <input type="checkbox" name="{{ video_device }}-exposure_auto" {{ 'checked' if device_settings['exposure_auto'] == '3' else '' }} id="{{ video_device }}-exposure_auto"/>
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-exposure_auto_priority">Exposure Auto Priority</label>
+                        <input type="checkbox" name="{{ video_device }}-exposure_auto_priority" {{ 'checked' if device_settings['exposure_auto_priority'] == '1' else '' }} id="{{ video_device }}-exposure_auto_priority"/>
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-exposure_absolute">Exposure Absolute</label>
+                        <input type="number" min="3" max="1600" value="{{ device_settings['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute" id="{{ video_device }}-exposure_absolute" onchange="updateValue(this, '{{ video_device }}-exposure_absolute-range')" />
+                        <input type="range" min="3" max="1600" value="{{ device_settings['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute-range" id="{{ video_device }}-exposure_absolute-range" oninput="updateValue(this, '{{ video_device }}-exposure_absolute')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-brightness">Brightness</label>
+                        <input type="number" min="0" max="255" value="{{ device_settings['brightness'] }}" name="{{ video_device }}-brightness" id="{{ video_device }}-brightness" onchange="updateValue(this, '{{ video_device }}-brightness-range')" />
+                        <input type="range" min="0" max="255" value="{{ device_settings['brightness'] }}" name="{{ video_device }}-brightness-range" id="{{ video_device }}-brightness-range" oninput="updateValue(this, '{{ video_device }}-brightness')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-contrast">Contrast</label>
+                        <input type="number" min="0" max="255" value="{{ device_settings['contrast'] }}" name="{{ video_device }}-contrast" id="{{ video_device }}-contrast" onchange="updateValue(this, '{{ video_device }}-contrast-range')" />
+                        <input type="range" min="0" max="255" value="{{ device_settings['contrast'] }}" name="{{ video_device }}-contrast-range" id="{{ video_device }}-contrast-range" oninput="updateValue(this, '{{ video_device }}-contrast')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-saturation">Saturation</label>
+                        <input type="number" min="0" max="255" value="{{ device_settings['saturation'] }}" name="{{ video_device }}-saturation" id="{{ video_device }}-saturation" onchange="updateValue(this, '{{ video_device }}-saturation-range')" />
+                        <input type="range" min="0" max="255" value="{{ device_settings['saturation'] }}" name="{{ video_device }}-saturation-range" id="{{ video_device }}-saturation-range" oninput="updateValue(this, '{{ video_device }}-saturation')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-sharpness">Sharpness</label>
+                        <input type="number" min="0" max="255" value="{{ device_settings['sharpness'] }}" name="{{ video_device }}-sharpness" id="{{ video_device }}-sharpness" onchange="updateValue(this, '{{ video_device }}-sharpness-range')" />
+                        <input type="range" min="0" max="255" value="{{ device_settings['sharpness'] }}" name="{{ video_device }}-sharpness-range" id="{{ video_device }}-sharpness-range" oninput="updateValue(this, '{{ video_device }}-sharpness')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-pan_absolute">Pan Absolute</label>
+                        <input type="number" min="-36000" max="36000" step="3600" value="{{ device_settings['pan_absolute'] }}" name="{{ video_device }}-pan_absolute" id="{{ video_device }}-pan_absolute" onchange="updateValue(this, '{{ video_device }}-pan_absolute-range')" />
+                        <input type="range" min="-36000" max="36000" step="3600" value="{{ device_settings['pan_absolute'] }}" name="{{ video_device }}-pan_absolute-range" id="{{ video_device }}-pan_absolute-range" oninput="updateValue(this, '{{ video_device }}-pan_absolute')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-tilt_absolute">Tilt Absolute</label>
+                        <input type="number" min="-36000" max="36000" step="3600" value="{{ device_settings['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute" id="{{ video_device }}-tilt_absolute" onchange="updateValue(this, '{{ video_device }}-tilt_absolute-range')" />
+                        <input type="range" min="-36000" max="36000" step="3600" value="{{ device_settings['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute-range" id="{{ video_device }}-tilt_absolute-range" oninput="updateValue(this, '{{ video_device }}-tilt_absolute')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-backlight_compensation">Backlight Compensation</label>
+                        <input type="checkbox" name="{{ video_device }}-backlight_compensation" {{ 'checked' if device_settings['backlight_compensation'] == '1' }} id="{{ video_device }}-backlight_compensation"/>
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-focus_auto">Focus Auto</label>
+                        <input type="checkbox" name="{{ video_device }}-focus_auto" {{ 'checked' if device_settings['focus_auto'] == '1' }} id="{{ video_device }}-focus_auto"/>
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-focus_absolute">Focus Absolute</label>
+                        <input type="number" min="0" max="250" step="5" value="{{ device_settings['focus_absolute'] }}" name="{{ video_device }}-focus_absolute" id="{{ video_device }}-focus_absolute" onchange="updateValue(this, '{{ video_device }}-focus_absolute-range')" />
+                        <input type="range" min="0" max="250" step="5" value="{{ device_settings['focus_absolute'] }}" name="{{ video_device }}-focus_absolute-range" id="{{ video_device }}-focus_absolute-range" oninput="updateValue(this, '{{ video_device }}-focus_absolute')" />
+                    </div>
+
+                    <div class="video-control">
+                        <label for="{{ video_device }}-zoom_absolute">Zoom Absolute</label>
+                        <input type="number" min="100" max="500" value="{{ device_settings['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute" id="{{ video_device }}-zoom_absolute" onchange="updateValue(this, '{{ video_device }}-zoom_absolute-range')" />
+                        <input type="range" min="100" max="500" value="{{ device_settings['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute-range" id="{{ video_device }}-zoom_absolute-range" oninput="updateValue(this, '{{ video_device }}-zoom_absolute')" />
+                    </div>
                 </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-white_balance_temperature_auto">White Balance Auto</label>
-                    <input type="checkbox" name="{{ video_device }}-white_balance_temperature_auto" {{ 'checked' if device_settings['white_balance_temperature_auto'] == '1' else '' }} id="{{ video_device }}-white_balance_temperature_auto"/>
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-white_balance_temperature">White Balance Temperature</label>
-                    <input type="number" min="2000" max="6500" value="{{ device_settings['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature" id="{{ video_device }}-white_balance_temperature" onchange="updateValue(this, '{{ video_device }}-white_balance_temperature-range')" />
-                    <input type="range" min="2000" max="6500" value="{{ device_settings['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature-range" id="{{ video_device }}-white_balance_temperature-range" oninput="updateValue(this, '{{ video_device }}-white_balance_temperature')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-exposure_auto">Exposure Auto</label>
-                    <input type="checkbox" name="{{ video_device }}-exposure_auto" {{ 'checked' if device_settings['exposure_auto'] == '3' else '' }} id="{{ video_device }}-exposure_auto"/>
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-exposure_auto_priority">Exposure Auto Priority</label>
-                    <input type="checkbox" name="{{ video_device }}-exposure_auto_priority" {{ 'checked' if device_settings['exposure_auto_priority'] == '1' else '' }} id="{{ video_device }}-exposure_auto_priority"/>
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-exposure_absolute">Exposure Absolute</label>
-                    <input type="number" min="3" max="1600" value="{{ device_settings['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute" id="{{ video_device }}-exposure_absolute" onchange="updateValue(this, '{{ video_device }}-exposure_absolute-range')" />
-                    <input type="range" min="3" max="1600" value="{{ device_settings['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute-range" id="{{ video_device }}-exposure_absolute-range" oninput="updateValue(this, '{{ video_device }}-exposure_absolute')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-brightness">Brightness</label>
-                    <input type="number" min="0" max="255" value="{{ device_settings['brightness'] }}" name="{{ video_device }}-brightness" id="{{ video_device }}-brightness" onchange="updateValue(this, '{{ video_device }}-brightness-range')" />
-                    <input type="range" min="0" max="255" value="{{ device_settings['brightness'] }}" name="{{ video_device }}-brightness-range" id="{{ video_device }}-brightness-range" oninput="updateValue(this, '{{ video_device }}-brightness')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-contrast">Contrast</label>
-                    <input type="number" min="0" max="255" value="{{ device_settings['contrast'] }}" name="{{ video_device }}-contrast" id="{{ video_device }}-contrast" onchange="updateValue(this, '{{ video_device }}-contrast-range')" />
-                    <input type="range" min="0" max="255" value="{{ device_settings['contrast'] }}" name="{{ video_device }}-contrast-range" id="{{ video_device }}-contrast-range" oninput="updateValue(this, '{{ video_device }}-contrast')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-saturation">Saturation</label>
-                    <input type="number" min="0" max="255" value="{{ device_settings['saturation'] }}" name="{{ video_device }}-saturation" id="{{ video_device }}-saturation" onchange="updateValue(this, '{{ video_device }}-saturation-range')" />
-                    <input type="range" min="0" max="255" value="{{ device_settings['saturation'] }}" name="{{ video_device }}-saturation-range" id="{{ video_device }}-saturation-range" oninput="updateValue(this, '{{ video_device }}-saturation')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-sharpness">Sharpness</label>
-                    <input type="number" min="0" max="255" value="{{ device_settings['sharpness'] }}" name="{{ video_device }}-sharpness" id="{{ video_device }}-sharpness" onchange="updateValue(this, '{{ video_device }}-sharpness-range')" />
-                    <input type="range" min="0" max="255" value="{{ device_settings['sharpness'] }}" name="{{ video_device }}-sharpness-range" id="{{ video_device }}-sharpness-range" oninput="updateValue(this, '{{ video_device }}-sharpness')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-pan_absolute">Pan Absolute</label>
-                    <input type="number" min="-36000" max="36000" step="3600" value="{{ device_settings['pan_absolute'] }}" name="{{ video_device }}-pan_absolute" id="{{ video_device }}-pan_absolute" onchange="updateValue(this, '{{ video_device }}-pan_absolute-range')" />
-                    <input type="range" min="-36000" max="36000" step="3600" value="{{ device_settings['pan_absolute'] }}" name="{{ video_device }}-pan_absolute-range" id="{{ video_device }}-pan_absolute-range" oninput="updateValue(this, '{{ video_device }}-pan_absolute')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-tilt_absolute">Tilt Absolute</label>
-                    <input type="number" min="-36000" max="36000" step="3600" value="{{ device_settings['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute" id="{{ video_device }}-tilt_absolute" onchange="updateValue(this, '{{ video_device }}-tilt_absolute-range')" />
-                    <input type="range" min="-36000" max="36000" step="3600" value="{{ device_settings['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute-range" id="{{ video_device }}-tilt_absolute-range" oninput="updateValue(this, '{{ video_device }}-tilt_absolute')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-backlight_compensation">Backlight Compensation</label>
-                    <input type="checkbox" name="{{ video_device }}-backlight_compensation" {{ 'checked' if device_settings['backlight_compensation'] == '1' }} id="{{ video_device }}-backlight_compensation"/>
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-focus_auto">Focus Auto</label>
-                    <input type="checkbox" name="{{ video_device }}-focus_auto" {{ 'checked' if device_settings['focus_auto'] == '1' }} id="{{ video_device }}-focus_auto"/>
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-focus_absolute">Focus Absolute</label>
-                    <input type="number" min="0" max="250" step="5" value="{{ device_settings['focus_absolute'] }}" name="{{ video_device }}-focus_absolute" id="{{ video_device }}-focus_absolute" onchange="updateValue(this, '{{ video_device }}-focus_absolute-range')" />
-                    <input type="range" min="0" max="250" step="5" value="{{ device_settings['focus_absolute'] }}" name="{{ video_device }}-focus_absolute-range" id="{{ video_device }}-focus_absolute-range" oninput="updateValue(this, '{{ video_device }}-focus_absolute')" />
-                </div>
-                <div class="video-control">
-                    <label for="{{ video_device }}-zoom_absolute">Zoom Absolute</label>
-                    <input type="number" min="100" max="500" value="{{ device_settings['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute" id="{{ video_device }}-zoom_absolute" onchange="updateValue(this, '{{ video_device }}-zoom_absolute-range')" />
-                    <input type="range" min="100" max="500" value="{{ device_settings['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute-range" id="{{ video_device }}-zoom_absolute-range" oninput="updateValue(this, '{{ video_device }}-zoom_absolute')" />
+                <div>
+                    <button name="update" onclick="updateSettings('{{ video_device }}')">Update</button>
                 </div>
             </div>
-        <div>
-            <button name="update" onclick="updateSettings('{{ video_device }}')">Update</button>
-        </div>
             {% endfor %}
         </main>
 

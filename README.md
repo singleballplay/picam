@@ -4,16 +4,16 @@ Grab the latest Raspbian "lite" image from https://www.raspberrypi.org/downloads
 
 The following commands all assume a Linux operating system is being used. If you are on Windows you may need to adjust some of the commands. Feel free to use an editor of your choice instead of vi as well if you aren't familiar with it.
 
-Remount the micro sd card and make the following changes (your path may be different to the boot and rootfs directories):
+Remount the micro sd card and make the following changes (your path may be different to the boot and rootfs directories). I use Vi as the editor but you can use whatever editor you feel comfortable with. Using nano anywhere you see vi might be a bit easier if you aren't familiar with the program.
 
-- Create an empty ssh file in the boot partition to enable ssh access to the pi. You should see two paritions rootfs and boot.
+- On your host machine create an empty ssh file in the boot partition to enable ssh access to the pi. You should see two paritions rootfs and boot.
 
     ```
     $ cd /var/host/media/removeable/boot
     $ touch ssh
     ```
 
-- Change the hostname to something unique for your network. If your only pi is this one feel free to leave it as 'raspberry' but you probably want to change it. Be careful to edit the relative path etc/ files not your local machine's.
+- Also change the hostname to something unique for your network. If your only pi is this one feel free to leave it as 'raspberry' but you probably want to change it. Be careful to edit the relative path etc/ files not your local machine's.
 
     ```
     $ cd /var/host/media/removeable/rootfs
@@ -24,7 +24,7 @@ Remount the micro sd card and make the following changes (your path may be diffe
 - Add your wifi credentials in the wpa_supplicant file.
 
     ```
-    $ sudo etc/wpa_supplicant/wpa_supplication.conf
+    $ sudo vi etc/wpa_supplicant/wpa_supplication.conf
     ```
 
 - Add a block like this:
@@ -36,7 +36,9 @@ Remount the micro sd card and make the following changes (your path may be diffe
     }
     ```
 
-Go ahead and put the sd card in the pi and power it on. Use and SSH connection to setup things after the pi is running. The default username is probably pi and the password is probably raspberry, you probably will want to change that.
+Now go ahead and put the sd card in the pi and power it on. Use an SSH connection to setup things after the pi is running. The default username is probably pi and the password is probably raspberry, you probably will want to change that. You can also connect the Pi to a monitor and keyboard and login normally when it boots up.
+
+    $ ssh pi@yourhostnamehere
 
 Change the Localisation Options to your locale if you're not in GB. Go to the 'Interfacing Options and enable the camera module. Go to 'Advanced Options and expand the filesystem.
 
@@ -46,11 +48,19 @@ That's it for the basic Raspbian setup you'll need. You might also want too chan
 
 # Installing The Software
 
-Clone or download the latest version of the code here: https://gitlab.com/singleballplay/picam.
+At this point you'll need to SSH into the Raspberry Pi, or you can hook your Pi up to a monitor and keyboard and login with that.
 
-Unzip the archive and navigate to the project directory. There is a picam.yaml.example file you can copy and name picam.yaml, then add your configuration to it. Replace the spots for the serial numbers with the serials numbers for your camera(s) (directions below).
+Clone the latest version of the code here: https://gitlab.com/singleballplay/picam. You might need to install git first.
 
-Run the setup script and you should be good to go. It will probably take a bit to upgrade everything so be patient. Reboot afterwards and you should have the stream(s) available to test.
+    $ sudo apt -y install git
+    $ git clone https://gitlab.com/singleballplay/picam.git
+    $ cd picam
+
+There is a picam.yaml.example file you can copy and name picam.yaml, then add your configuration to it. Replace the spots for the serial numbers with the serials numbers for your camera(s) (directions below).
+
+    $ cp picam.yaml.example picam.yaml
+
+Once you have your configuration ready, run the setup script and you should be good to go. It will probably take a bit to upgrade everything so be patient. Reboot afterwards and you should have the stream(s) available to test. If you need edit the configuration file, you can run the setup again at a later time.
 
     $ ./setup
     $ sudo shutdown -r now
