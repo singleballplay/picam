@@ -108,3 +108,13 @@ If using a Logitech Brio/4K Pro, keep the exposure_auto setting at or below 200 
 If you are using a C920 for displays, consider bumping the exposure_auto setting to 300 or 400 to reduce the scan line effect and reduce the gain setting to compensate for the additional brightness. Play around with what works best.
 
 Consider running secondary cameras at a lower resolution if you are going to be composing them into a 1080p or 720p feed. That will save on bandwidth and CPU/GPU in the composition software like OBS. Again, play with it depending on the power of the streaming machine.
+
+Sometimes the service on the Pi doesn't start up properly when the device boots up. It fails to set the webcam settings properly. You can see if that's the case by logging into the Pi and running the following command.
+
+    $ sudo systemctl status picam
+
+If you see some text that looks like errors, try restarting the service with the following command.
+
+    $ sudo systemctl restart picam
+
+Normally doing that once should be enough. On rare occassions you may need to do it again. I'm working on a fix.
