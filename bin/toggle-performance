@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+
+if [ "${GOVERNOR}" == "ondemand" ]; then
+    sudo sh -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+else
+    sudo sh -c "echo ondemand > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+fi

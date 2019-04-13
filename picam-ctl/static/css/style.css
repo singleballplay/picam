@@ -1,0 +1,121 @@
+html {
+    box-sizing: border-box;
+    font-family: arial, sans-serif;
+    color: #555;
+    font-size: 16px;
+    line-height: 1.5em;
+}
+
+body {
+    max-width: 960px;
+    padding: 10px 20px;
+    margin: auto;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+fieldset {
+    margin: 10px 0;
+    border: 1px solid #ccc;
+}
+
+input, button, select {
+    font-size: 16px;
+    padding: 0.5em 0.75em;
+    color: #333;
+    background: none;
+    border: 1px solid #ccc;
+}
+
+input[type=checkbox] {
+    display: inline-block;
+    margin: 0.5em 0em;
+    vertical-align: middle;
+    height: 16px;
+    width: 16px;
+}
+
+input[type=range] {
+    vertical-align: middle;
+    border: none;
+}
+
+input[type=range]::-moz-range-track {
+    background-color: #ccc;
+}
+
+label {
+    padding: 0.5em 0.75em;
+}
+
+button:disabled {
+    background: #f7f7f7;
+}
+
+.video-control label,
+.audio-control label {
+    display: inline-block;
+    width: 20vw;
+    font-width: bold;
+}
+
+.video-control input[type=number],
+.audio-control input[type=number] {
+    width: 10vw;
+    margin-right: 10px;
+}
+
+.video-control input[type=range],
+.audio-control input[type=range] {
+    width: 15vw;
+}
+
+h1, h2, h3, h4, h5, h6, p, ol, ul {
+    margin: 0;
+    padding: 0;
+}
+
+h1 { font-size: 1.5em; }
+h2 { font-size: 1.2em; }
+h3 { font-size: 1.1em; }
+
+header h1 {
+    padding: 0.5em 0;
+}
+
+ol, ul {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+#site-nav a {
+    display: inline-block;
+    padding: 0.5em 1em;
+    border: 1px solid #ccc;
+    margin: 0 10px;
+}
+
+#site-nav a:first-child {
+    margin: 0;
+}
+
+.video-device,
+.audio-device {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#system-controls div {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.settings-value {
+    border: 1px solid #ccc;
+}

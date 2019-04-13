@@ -1,3 +1,7 @@
+# Prebuild Image
+
+For convenience, a prebuilt image is available.
+
 # Installing Raspbian
 
 Grab the latest Raspbian "lite" image from https://www.raspberrypi.org/downloads/raspbian/. At the moment the current version is 2018-11-13-raspbian-stretch-lite.zip. Unzip it locally so you have access to the .img file. Follow the instructions on the Raspberry Pi website to format the disk with the image so you have a fresh operating system.

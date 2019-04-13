@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en-us">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+        {% block head %}
+        <title>{% block title %}Picam{% endblock %}</title>
+        {% endblock %}
+    </head>
+
+    <body>
+        <header>
+            <div id="site-nav">
+                <a href="/">home</a>
+                <a href="/devices">devices</a>
+                <a href="/wifi">wifi</a>
+                <a href="/admin">admin</a>
+            </div>
+            {% block header %}{% endblock %}
+        </header>
+
+        <main>
+            {% block main %}{% endblock %}
+        </main>
+
+        <footer>
+            {% block footer %}{% endblock %}
+        </footer>
+
+        <script>
+            {% block script %}{% endblock %}
+        </script>
+    </body>
+</html>

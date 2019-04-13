@@ -1,0 +1,67 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Admin{% endblock %}
+
+{% block header %}
+<h1>Picam Admin</h1>
+{% endblock %}
+
+{% block main %}
+<div id="system-controls">
+    <h2>System Controls</h2>
+    <fieldset>
+        <legend>Manage Config</legend>
+        <form name="write-form" method="POST" action="/write-config">
+            <div>
+                <input type="submit" id="write-config" name="write-config" value="Write Config"/>
+            </div>
+        </form>
+        <form name="reload-form" method="POST" action="/reload-config">
+            <div>
+                <input type="submit" id="reload-config" name="reload-config" value="Reload Config"/>
+            </div>
+        </form>
+        <form name="download-form" method="GET" action="/download-config">
+            <div>
+                <input type="submit" name="download-config" value="Download Config"/>
+            </div>
+        </form>
+        <!--
+        <div>
+            <form name="config-management" method="POST" action="/upload-config">
+                <input type="file" id="config-file" name="config-file" />
+                <input type="submit" id="upload-config" name="upload-config" value="Upload Config"/>
+            </form>
+        </div>
+        -->
+    </fieldset>
+    <fieldset>
+        <legend>Misc</legend>
+        <form name="scaling-governor-form" method="POST" action="/scaling-governor">
+            <div>
+                <input type="submit" name="submit" value="Toggle CPU Governor"/>
+                <span id="scaling-governor-setting">{{ scaling_governor }}</span>
+            </div>
+        </form>
+        <form name="update-form" method="POST" action="/update-picam">
+            <div>
+                <input type="submit" name="update-picam" value="Update Picam"/>
+            </div>
+        </form>
+        <form name="restart-form" method="POST" action="/restart-picam">
+            <div>
+                <input type="submit" name="restart-picam" id="restart-picam" value="Restart Picam Service"/>
+            </div>
+        </form>
+        <form name="reboot-form" method="POST" action="/reboot">
+            <div>
+                <input type="submit" name="reboot-pi" id="reboot-pi" onclick="return confirm('Are you sure you want to reboot?');" value="Reboot Pi"/>
+            </div>
+        </form>
+        <form name="shutdown-form" method="POST" action="/shutdown">
+            <div>
+                <input type="submit" name="shutdown-pi" id="shutdown-pi" onclick="return confirm('Are you sure you want to shutdown?');" value="Shutdown Pi"/>
+            </div>
+        </form>
+    </fieldset>
+</div>
+{% endblock %}

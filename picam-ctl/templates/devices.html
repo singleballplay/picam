@@ -1,0 +1,49 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Devices{% endblock %}
+
+{% block header %}
+<h1>PiCam Devices</h1>
+{% endblock %}
+
+{% block main %}
+<h2>Video Devices</h2>
+{% for video_device in video_devices %}
+<div class="video-device">
+    {% if video_device.device_config %}
+    <h3>{{ video_device.device_config['endpoint'] }}</h3>
+    {% else %}
+    <h3>Unassigned</h3>
+    {% endif %}
+    <div>{{ video_device.description }}</div>
+    <div>Device: {{ video_device.device }}</div>
+    <div>Serial: {{ video_device.serial }}</div>
+    {% if video_device.device_config %}
+        <a href="/config-video-device/{{ video_device.serial }}">Edit Configuration</a>
+    {% else %}
+        <a href="/config-video-device/{{ video_device.serial }}">Configure Device</a>
+    {% endif %}
+    </div>
+</div>
+{% endfor %}
+<h2>Audio Devices</h2>
+{% for audio_device in audio_devices %}
+<div class="video-device">
+    {% if audio_device.device_config %}
+    <h3>{{ audio_device.device_config['endpoint'] }}</h3>
+    {% else %}
+    <h3>Unassigned</h3>
+    {% endif %}
+    <div>{{ audio_device.description }}</div>
+    <div>ALSA device: {{ audio_device.alsa_idx }}</div>
+    <div>Serial: {{ audio_device.serial }}</div>
+    {% if audio_device.device_config %}
+    <div>
+        <div>Device Config: {{ audio_device.device_config }}</div>
+        <a href="/config-audio-device/{{ audio_device.serial }}">Edit Configuration</a>
+    </div>
+    {% elif audio_device.serial  %}
+    <div><a href="/config-audio-device/{{ audio_device.serial }}">Configure Device</a></div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

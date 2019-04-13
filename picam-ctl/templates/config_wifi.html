@@ -1,0 +1,31 @@
+{% extends 'layouts/base.html' %}
+{% block title %}WiFi Configuration{% endblock %}
+
+{% block header %}
+<h1>Configure WiFi</h1>
+{% endblock %}
+
+{% block main %}
+<form name="configure-wifi" method="POST" action="/wifi">
+    <div class="video-control">
+        <label for="hostname">hostname</label>
+        <input type="text" name="hostname" id="hostname" value="{{ hostname }}"/>
+    </div>
+    <div class="video-control">
+        <label for="ssid">SSID</label>
+        <input type="text" name="ssid" id="ssid" value="{{ ssid }}"/>
+    </div>
+    <div class="video-control">
+        <label for="password">Psk</label>
+        <input type="password" name="psk" id="psk" value="{{ psk }}"/>
+    </div>
+    <div>
+        <input type="submit" name="submit" value="Update WiFi"/>
+    </div>
+</form>
+<div style="margin-top: 20px;">
+    <h3>Note</h3>
+    <p>Some special characters may need to be delimited with a '\' before them like $.*[\^. If you have a complicated password with many special characters you will want to seach for "sed substitution escape characters" and see which ones need to be delimited.</p>
+    <p><br/>Or directly edit the <i>/etc/wpa_supplicant/wpa_supplicant.conf</i> file on the Pi.</p>
+</div>
+{% endblock %}

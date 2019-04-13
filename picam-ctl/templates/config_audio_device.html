@@ -1,0 +1,48 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Device Configuration{% endblock %}
+
+{% block header %}
+<h1>Configure Audio Device</h1>
+{% endblock %}
+
+{% block main %}
+<div class="audio-device">
+    <h2>{{ description }} [{{ serial }}]</h2>
+    <form name="update-audio-config" method="POST" action="/config-audio-device/{{ serial }}">
+    <div id="{{ audio_device }}" class="audio-settings">
+        <div class="audio-control">
+            <label for="{{ audio_device }}-endpoint">Endpoint</label>
+            <input type="text" value="{{ device_config['endpoint'] }}" name="{{ audio_device }}-endpoint" id="{{ audio_device }}-endpoint"/>
+        </div>
+        <div class="audio-control">
+            <label for="{{ audio_device }}-audio_rate">Audio Rate</label>
+            <select name="{{ audio_device }}-audio_rate" id="{{ audio_device }}-audio_rate">
+                <option value="32000" {{ 'selected' if device_config['audio_rate'] == 32000 else '' }}">32000</option>
+                <option value="44100" {{ 'selected' if device_config['audio_rate'] == 44100 else '' }}">44100</option>
+                <option value="48000" {{ 'selected' if device_config['audio_rate'] == 48000 else '' }}">48000</option>
+            </select>
+        </div>
+        <div class="audio-control">
+            <label for="{{ audio_device }}-type">Type</label>
+            <select name="{{ audio_device }}-type" id="{{ audio_device }}-type">
+                <option value="C920" {{ 'selected' if device_config['type'] == 'C920' else '' }}">C920</option>
+                <option value="C922" {{ 'selected' if device_config['type'] == 'C922' else '' }}">C922</option>
+                <option value="BRIO" {{ 'selected' if device_config['type'] == 'BRIO' else '' }}">BRIO</option>
+                <option value="LOGITECH" {{ 'selected' if device_config['type'] == 'LOGITECH' else '' }}">LOGITECH</option>
+                <option value="BLUE" {{ 'selected' if device_config['type'] == 'BLUE' else '' }}">BLUE</option>
+            </select>
+        </div>
+        <div id="system-controls">
+            <div class="audio-control">
+                <input type="submit" name="update" value="Update"/>
+            </div>
+            {% if device_config %}
+            <div>
+                <input type="submit" name="delete" value="Delete Configuration" onclick="return confirm('Are you sure you want to delete?');" />
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    </form>
+</div>
+{% endblock %}

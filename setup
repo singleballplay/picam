@@ -18,6 +18,8 @@ sudo apt install -y \
     ntpdate
 
 if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
+    # Raspberry Pi specific things
+
     # ensure v4l2 can load the pi camera
     echo 'bcm2835-v4l2' | sudo tee /etc/modules-load.d/pi_camera_module.conf
 
@@ -26,36 +28,49 @@ if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
         sudo sed -i '$iiwconfig wlan0 power off' /etc/rc.local
     fi
 
+    if [ "$(grep scaling_governor /etc/rc.local)" == "" ]; then
+        # crank up cpu freq, seems to help with the Brio/4K Pro image quality
+        # not necessary for C920/C922
+        sudo sed -i '$iecho performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' /etc/rc.local
+    fi
+
     if [ "$(grep tvservice /etc/rc.local)" == "" ]; then
         # turn off power to hdmi to save a bit of power
         sudo sed -i '$itvservice -o' /etc/rc.local
     fi
-
-    # crank up cpu freq
-    #sudo sh -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
 fi
 
-# put the rtsp server script in /opt
-sudo cp picam.py /opt/picam.py
-
-# copy over configuration
-if [ -f 'picam.yaml' ]; then
-    sudo cp picam.yaml /opt/picam.yaml
+if [ -f "picam.yaml" ]; then
+    echo "config file exists"
+else
+    cp picam.yaml.empty picam.yaml
 fi
 
-# load the picamera/webcam rtsp service
-sudo cp services/picam.service /lib/systemd/system/picam.service
-sudo systemctl daemon-reload
+# convenience scripts called from web admin page
+for f in $(ls bin)
+do
+    if [ ! -f "/usr/local/bin/${f}" ]; then
+        sudo ln -s "$(pwd)/bin/${f}" "/usr/local/bin/${f}"
+    fi
+done
 
-# run the service on startup
-sudo systemctl enable picam.service
+if [ ! -f "/lib/systemd/system/picam.service" ]; then
+    # load the picamera/webcam rtsp service
+    sudo ln -s $(pwd)/services/picam.service /lib/systemd/system/picam.service
+    sudo systemctl daemon-reload
 
-# copy over the picam-ctl service code
-sudo cp -r picam-ctl/ /opt/
+    # run the service on startup
+    sudo systemctl enable picam.service
+fi
 
-# load the webcam control service
-sudo cp services/picam-ctl.service /lib/systemd/system/picam-ctl.service
-sudo systemctl daemon-reload
 
-# run the service on startup
-sudo systemctl enable picam-ctl.service
+if [ ! -f "/lib/systemd/system/picam-ctl.service" ]; then
+    # load the webcam control service
+    sudo ln -s $(pwd)/services/picam-ctl.service /lib/systemd/system/picam-ctl.service
+    sudo systemctl daemon-reload
+
+    # run the service on startup
+    sudo systemctl enable picam-ctl.service
+fi
+
+echo "done"

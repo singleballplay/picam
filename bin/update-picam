@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+git -C /home/pi/picam pull --ff-only

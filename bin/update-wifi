@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+etc/wpa_supplicant/wpa_supplication.conf

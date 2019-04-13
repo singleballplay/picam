@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+LOCALE='en_US'
+sudo sed -i 's/# ${LOCALE}.UTF-8 UTF-8/${LOCALE}.UTF-8 UTF-8/' /etc/locale.gen
+sudo locale-gen ${LOCALE}.UTF-8
+sudo update-locale ${LOCALE}.UTF-8

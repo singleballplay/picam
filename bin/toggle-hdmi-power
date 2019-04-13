@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+HDMI_POWER=$(tvservice -s | grep "TV is off")
+
+if [ "${HDMI_POWER}" != "" ]; then
+    tvservice -o
+else
+    tvservice -p
+fi
