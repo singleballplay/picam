@@ -38,7 +38,7 @@ class IndexHandler(MethodView):
                 video_devices.update({serial: device_settings})
         audio_devices = {}
         for device_serial, device_info in find_audio_devices().items():
-            if serial in audio_configs.keys():
+            if device_serial in audio_configs.keys():
                 device_settings.update({
                     'path': audio_configs[device_serial]['endpoint'],
                     'device': device_serial,

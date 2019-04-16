@@ -183,15 +183,17 @@ def find_audio_devices():
         dev_serial = ''
         if cmd2.returncode == 0:
             dev_serial = cmd2.stdout.decode().strip().split('\n')[0].split('=')[1]
-        sound_devices.update({
-            dev_serial_short: {
-                'alsa_idx': '',
-                'snd_device': snd_device,
-                'description': dev_serial,
-            }
-        })
-    recordable_devices = get_recordable_devices()
-    asound_devices = get_asound_devices(recordable_devices)
+
+        if dev_serial_short:
+            sound_devices.update({
+                dev_serial_short: {
+                    'alsa_idx': '',
+                    'snd_device': snd_device,
+                    'description': dev_serial,
+                }
+            })
+    #recordable_devices = get_recordable_devices()
+    #asound_devices = get_asound_devices(recordable_devices)
     return sound_devices
 
 
