@@ -13,9 +13,11 @@ sudo apt install -y \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-tools \
     gstreamer1.0-alsa \
+    gstreamer1.0-libav \
     gstreamer1.0-omx \
     ntp \
-    ntpdate
+    ntpdate \
+    nginx
 
 if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
     # Raspberry Pi specific things
@@ -53,6 +55,9 @@ do
         sudo ln -s "/home/pi/picam/bin/${f}" "/usr/local/bin/${f}"
     fi
 done
+
+# configure nginx to redirect traffic to Flask app
+sudo cp default-site /etc/nginx/sites-available/default
 
 if [ ! -f "/lib/systemd/system/picam.service" ]; then
     # load the picamera/webcam rtsp service
