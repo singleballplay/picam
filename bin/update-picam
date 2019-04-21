@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 
-git -C /home/pi/picam pull --ff-only
+sudo -u pi git -C /home/pi/picam pull --ff-only
+
+# temporarily need if anyone has been updating
+# was setting ownership to root
+sudo chown -R pi:pi /home/pi/picam

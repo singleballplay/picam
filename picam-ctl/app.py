@@ -107,7 +107,10 @@ app.add_url_rule(
     '/hdmi',
     view_func=admin.HdmiHandler.as_view('hdmi')
 )
-
+app.add_url_rule(
+    '/wifi-power',
+    view_func=admin.WifiPowerHandler.as_view('wifi-power')
+)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)

@@ -58,18 +58,21 @@ button:disabled {
 .audio-control label {
     display: inline-block;
     width: 20vw;
+    min-width: 100px;
     font-width: bold;
 }
 
 .video-control input[type=number],
 .audio-control input[type=number] {
     width: 10vw;
+    min-width: 100px;
     margin-right: 10px;
 }
 
 .video-control input[type=range],
 .audio-control input[type=range] {
     width: 15vw;
+    min-width: 100px;
 }
 
 h1, h2, h3, h4, h5, h6, p, ol, ul {
@@ -97,12 +100,12 @@ img {
 #site-nav a {
     display: inline-block;
     padding: 0.5em 1em;
-    border: 1px solid #ccc;
     margin: 0 10px;
 }
 
-#site-nav a:first-child {
-    margin: 0;
+header div {
+    margin: 0 auto;
+    text-align: center;
 }
 
 .video-device,

@@ -320,7 +320,14 @@ class VideoDeviceHandler(MethodView):
             app.picam_config.video_devices[serial] = dict()
         if not app.picam_config.video_devices.get('v4l2'):
             app.picam_config.video_devices[serial]['v4l2'] = dict()
-        for config_option in ['endpoint', 'resolution', 'type', 'encoding', 'framerate']:
+        endpoint_url = request.form.get('{}-endpoint'.format(serial))
+        if endpoint_url and not endpoint_url.startswith('/'):
+            endpoint_url = '/' + endpoint_url
+        app.picam_config.video_devices[serial]['endpoint'] = endpoint_url
+        framerate = request.form.get('{}-framerate'.format(serial))
+        if framerate:
+            app.picam_config.video_devices[serial]['framerate'] = int(framerate)
+        for config_option in ['resolution', 'type', 'encoding']:
             app.picam_config.video_devices[serial][config_option] = request.form.get('{}-{}'.format(serial, config_option))
         for v4l2_ctl in LOGITECH_WEBCAM_OPTIONS:
             ctl_val = request.form.get('{}-{}'.format(serial, v4l2_ctl))
@@ -358,7 +365,14 @@ class AudioDeviceHandler(MethodView):
             return redirect('/devices')
         if not app.picam_config.audio_devices.get(serial):
             app.picam_config.audio_devices[serial] = dict()
-        for config_option in ['endpoint', 'type', 'audio_rate']:
+        endpoint_url = request.form.get('{}-endpoint'.format(serial))
+        if endpoint_url and not endpoint_url.startswith('/'):
+            endpoint_url = '/' + endpoint_url
+        app.picam_config.audio_devices[serial]['endpoint'] = endpoint_url
+        audio_rate = request.form.get('{}-audio_rate'.format(serial))
+        if audio_rate:
+            app.picam_config.audio_devices[serial]['audio_rate'] = int(audio_rate)
+        for config_option in ['type']:
             app.picam_config.audio_devices[serial][config_option] = request.form.get('{}-{}'.format(serial, config_option))
         return redirect('/devices')
 

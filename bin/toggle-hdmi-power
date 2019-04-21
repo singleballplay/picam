@@ -2,8 +2,8 @@
 
 HDMI_POWER=$(tvservice -s | grep "TV is off")
 
-if [ "${HDMI_POWER}" != "" ]; then
-    tvservice -o
+if [ "${HDMI_POWER}" == "" ]; then
+    sudo tvservice -o
 else
-    tvservice -p
+    sudo tvservice -p
 fi

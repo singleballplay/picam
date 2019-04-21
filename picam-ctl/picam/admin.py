@@ -4,7 +4,7 @@ import yaml
 import json
 import re
 
-from flask import request, flash, redirect, Response, render_template, current_app as app
+from flask import request, flash, url_for, redirect, Response, render_template, current_app as app
 from flask.views import MethodView
 
 def noop(self, *args, **kw):
@@ -45,49 +45,55 @@ class AdminHandler(MethodView):
 class ScalingGovernorHandler(MethodView):
     def post(self):
         governor_cmd = subprocess.run(('toggle-performance'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        return redirect('/admin')
+        return redirect(url_for('admin'))
 
 
 class UpdatePicamHandler(MethodView):
     def post(self):
         cmd1 = subprocess.run(('update-picam'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        return redirect('/admin')
+        return redirect(url_for('admin'))
 
 
 class RestartPicamHandler(MethodView):
     def post(self):
         cmd1 = subprocess.run(('restart-picam-service'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        return redirect('/admin')
+        return redirect(url_for('admin'))
+
+
+class WifiPowerHandler(MethodView):
+    def post(self):
+        cmd1 = subprocess.run(('sudo', 'iwconfig', 'wlan0', 'power', 'off'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        return redirect(url_for('admin'))
 
 
 class HdmiHandler(MethodView):
     def post(self):
-        cmd1 = subprocess.run(('toggle-hdmi'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        return redirect('/admin')
+        cmd1 = subprocess.run(('toggle-hdmi-power'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        return redirect(url_for('admin'))
 
 
 class RebootHandler(MethodView):
     def post(self):
         cmd1 = subprocess.run(('sudo', 'shutdown', '-r'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        return redirect('/admin')
+        return redirect(url_for('admin'))
 
 
 class ShutdownHandler(MethodView):
     def post(self):
         cmd1 = subprocess.run(('sudo', 'shutdown', '-h'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        return redirect('/admin')
+        return redirect('admin')
 
 
 class WriteConfigHandler(MethodView):
     def post(self):
         app.picam_config.write_config()
-        return redirect('/admin')
+        return redirect(url_for('admin'))
 
 
 class ReloadConfigHandler(MethodView):
     def post(self):
         app.picam_config.load_config()
-        return redirect('/admin')
+        return redirect(url_for('admin'))
 
 
 class DownloadConfigHandler(MethodView):

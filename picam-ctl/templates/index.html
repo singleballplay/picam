@@ -12,8 +12,8 @@
     <div id="video_{{ video_device }}" class="video-settings" style="display: none;">
         <div class="video-control">
             <label for="{{ video_device }}-gain">Gain</label>
-            <input type="number" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-gain" id="{{ video_device }}-gain" onchange="updateValue(this, '{{ video_device }}-range');" />
-            <input type="range" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-range" id="{{ video_device }}-range" oninput="updateValue(this, '{{ video_device }}-gain');" />
+            <input type="number" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-gain" id="{{ video_device }}-gain" onchange="updateValue(this, '{{ video_device }}-gain-range');" />
+            <input type="range" min="0" max="255" value="{{ device_settings['gain'] }}" name="{{ video_device }}-gain-range" id="{{ video_device }}-gain-range" oninput="updateValue(this, '{{ video_device }}-gain');" />
         </div>
 
         <div class="video-control">
@@ -101,6 +101,7 @@
             <input type="range" min="100" max="500" value="{{ device_settings['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute-range" id="{{ video_device }}-zoom_absolute-range" oninput="updateValue(this, '{{ video_device }}-zoom_absolute')" />
         </div>
         <div>
+	    <input type="hidden" name="{{ video_device }}-device" id="{{ video_device }}-device" value="{{ device_settings['device'] }}"/>
             <button name="update" onclick="updateSettings('{{ video_device }}', '{{ device_settings['device'] }}')">Update</button>
         </div>
     </div>
@@ -122,6 +123,31 @@ function toggleDisplay(device_section) {
 
 function updateValue(elem, val) {
     document.getElementById(val).value = elem.value;
+    let start_offset = elem.id.indexOf('-');
+    let serial = elem.id.substring(0, start_offset);
+    var key = elem.id.substring(start_offset + 1);
+    if (key.indexOf('-range') > 0) {
+        key = key.substring(0, key.indexOf('-range'));
+    }
+    video_device = document.getElementById(serial + '-device').value;
+    let data = {
+        'serial': serial,
+        'video_device': video_device,
+        'settings': {
+            [key]: elem.value,
+        }
+    };
+    fetch('/api/video-device/' + serial, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(json) {
+        console.log(json);
+    });
 }
 
 function updateSettings(serial, video_device) {
