@@ -23,6 +23,7 @@ class PicamConfig:
                 settings = yaml.safe_load(settings_file)
                 self.video_devices = settings['video_devices']
                 self.audio_devices = settings['audio_devices']
+                self.pi = settings.get('pi', {})
             except:
                 logging.error('failed to parse settings file')
 
@@ -30,6 +31,7 @@ class PicamConfig:
         data = dict(
             video_devices=self.video_devices,
             audio_devices=self.audio_devices,
+            pi=self.pi,
         )
         with open('/home/pi/picam/picam.yaml', 'w') as settings_file:
             yaml.dump(data, settings_file, default_flow_style=False)
@@ -113,4 +115,9 @@ app.add_url_rule(
 )
 
 if __name__ == '__main__':
+    import subprocess
+    if app.picam_config.pi.get('wlan0_power', 'off') == 'off':
+        cmd1 = subprocess.run(('sudo', 'iwconfig', 'wlan0', 'power', 'off'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
+        cmd1 = subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     app.run(host='0.0.0.0', threaded=True)
