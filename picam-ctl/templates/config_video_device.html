@@ -39,10 +39,10 @@
             <div class="video-control">
                 <label for="{{ video_device }}-framerate">Framerate</label>
                 <select name="{{ video_device }}-framerate" id="{{ video_device }}-framerate">
-                    <option value="30" {{ 'selected' if device_config['framerate']|int == 30 else '' }}>30</option>
-                    <option value="60" {{ 'selected' if device_config['framerate']|int == 60 else '' }}>60</option>
-                    <option value="24" {{ 'selected' if device_config['framerate']|int == 24 else '' }}>24</option>
-                    <option value="48" {{ 'selected' if device_config['framerate']|int == 48 else '' }}>48</option>
+                    <option value="30" {{ 'selected' if device_config['framerate'] == 30 else '' }}>30</option>
+                    <option value="60" {{ 'selected' if device_config['framerate'] == 60 else '' }}>60</option>
+                    <option value="24" {{ 'selected' if device_config['framerate'] == 24 else '' }}>24</option>
+                    <option value="48" {{ 'selected' if device_config['framerate'] == 48 else '' }}>48</option>
                 </select>
             </div>
             <div class="video-control">

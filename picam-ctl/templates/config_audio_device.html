@@ -17,9 +17,9 @@
         <div class="audio-control">
             <label for="{{ audio_device }}-audio_rate">Audio Rate</label>
             <select name="{{ audio_device }}-audio_rate" id="{{ audio_device }}-audio_rate">
-                <option value="32000" {{ 'selected' if device_config['audio_rate']|int == 32000 else '' }}>32000</option>
-                <option value="44100" {{ 'selected' if device_config['audio_rate']|int == 44100 else '' }}>44100</option>
-                <option value="48000" {{ 'selected' if device_config['audio_rate']|int == 48000 else '' }}>48000</option>
+                <option value="32000" {{ 'selected' if device_config['audio_rate'] == 32000 else '' }}>32000</option>
+                <option value="44100" {{ 'selected' if device_config['audio_rate'] == 44100 else '' }}>44100</option>
+                <option value="48000" {{ 'selected' if device_config['audio_rate'] == 48000 else '' }}>48000</option>
             </select>
         </div>
         <div class="audio-control">
