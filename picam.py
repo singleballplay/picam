@@ -240,7 +240,7 @@ for alsa_idx, description in find_audio_devices():
     else:
         for video_device, device_info in video_devices:
             s = re.search(r'(usb[^\)]+)', device_info['description'])
-            if s.group(0) in description:
+            if s and s.group(0) in description:
                 serial = device_info['serial']
                 if serial in audio_configs.keys():
                     audio_path = audio_configs[serial]['endpoint']
