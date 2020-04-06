@@ -78,9 +78,7 @@ def find_video_devices():
     devices = {}
     while len(video_devices):
         description = video_devices.pop(0)
-        print(description)
         device = video_devices.pop(0)
-        print(device)
         serial = find_serial(device)
         devices.update({
             device: {
@@ -92,7 +90,6 @@ def find_video_devices():
             device = video_devices.pop(0)
         if len(video_devices) == 1:
             break
-    print('returning {}'.format(devices))
     return devices.items()
 
 
@@ -244,18 +241,19 @@ for alsa_idx, description in find_audio_devices():
     if 'Snowball' in description:
         audio_path = '/snowball-audio'
         audio_rate = 48000
-    else:
+    elif 'usb' in description:
+        audio_usb_device = re.search(r'(usb[^,]+)', description).group(0)
         for video_device, device_info in video_devices:
             s = re.search(r'(usb[^\)]+)', device_info['description'])
-            if s and s.group(0) in description:
-                serial = device_info['serial']
-                if serial in audio_configs.keys():
-                    audio_path = audio_configs[serial]['endpoint']
-                    audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
-                    break
+            if s:
+                if audio_usb_device in s.group(0):
+                    serial = device_info['serial']
+                    if serial in audio_configs.keys():
+                        audio_path = audio_configs[serial]['endpoint']
+                        audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
+                        break
     if audio_path:
         launch = (
-            #'alsasrc device=hw:{alsa_idx} do-timestamp=true '
             'alsasrc device=hw:{alsa_idx} '
             '! audio/x-raw,rate={audio_rate} '
             '! queue ! voaacenc bitrate=160000 '
