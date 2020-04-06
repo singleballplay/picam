@@ -118,9 +118,15 @@ if __name__ == '__main__':
     import subprocess
     scaling_governor = app.picam_config.pi.get('scaling_governor', 'ondemand')
     echo_str = 'echo {} > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'.format(scaling_governor)
-    cmd1 = subprocess.run(('sudo', 'sh', '-c', '{}'.format(echo_str)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    subprocess.run(('sudo', 'sh', '-c', '{}'.format(echo_str)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+    # unblock the wifi, assumes a valid country code has been set
+    subprocess.run(('sudo', 'rfkill', 'unblock', 'wifi'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+    # turn off things that chew up power if they aren't needed
     if app.picam_config.pi.get('wlan0_power', 'off') == 'off':
-        cmd1 = subprocess.run(('sudo', 'iwconfig', 'wlan0', 'power', 'off'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        subprocess.run(('sudo', 'iwconfig', 'wlan0', 'power', 'off'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
     if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
-        cmd1 = subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     app.run(host='0.0.0.0', threaded=True)

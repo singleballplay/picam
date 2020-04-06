@@ -4,6 +4,7 @@
 sudo apt update
 sudo apt install -y \
     vim \
+    python3-yaml \
     python3-gi \
     python3-flask \
     python3-yaml \
