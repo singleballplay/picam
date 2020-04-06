@@ -1,7 +1,8 @@
 # Prebuilt Image
 
-For convenience, a prebuilt image is available. It is built off the latest Raspbian stretch lite image (2019-04-08) but already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
+For convenience, a prebuilt image is available. It is built using the pi-gen project to build a custom Raspbian Buster lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
 
+## Outdated: new build coming soon
 Download [picam.zip](https://drive.google.com/file/d/1XV0cs_vLUJpFhLJIByGtP0IOqVeAo0fj/view)
 
 SHA-256: 82103060a3e0966bc86106e5b9c018f823859d4577c44d31400cffd23e9fb83c
@@ -12,7 +13,7 @@ It is a good idea to visit the admin page in the website and run the 'Update Pic
 
 ## Install Raspbian
 
-Grab the latest Raspbian "lite" image from https://www.raspberrypi.org/downloads/raspbian/. At the moment the current version is 2019-04-08-raspbian-stretch-lite.zip. Unzip it locally so you have access to the .img file. Follow the instructions on the Raspberry Pi website to format the disk with the image so you have a fresh operating system.
+Grab the latest Raspbian "lite" image from https://www.raspberrypi.org/downloads/raspbian/. At the moment the current version is 2020-02-13-raspbian-buster-lite.zip. Unzip it locally so you have access to the .img file. Follow the instructions on the Raspberry Pi website to format the disk with the image so you have a fresh operating system.
 
 The following commands all assume a Linux operating system is being used. If you are on Windows you may need to adjust some of the commands. Feel free to use an editor of your choice instead of vi as well if you aren't familiar with it.
 
@@ -52,7 +53,7 @@ Now go ahead and put the sd card in the pi and power it on. Use an SSH connectio
 
     $ ssh pi@yourhostnamehere
 
-Change the Localisation Options to your locale if you're not in GB. Go to the 'Interfacing Options and enable the camera module. Go to 'Advanced Options and expand the filesystem.
+Change the Localisation Options to your locale if you're not in GB. Go to the 'Interfacing Options and enable the camera module. Go to 'Advanced Options and expand the filesystem. Also make sure you set the wifi locale.
 
     $ sudo raspi-config
 
