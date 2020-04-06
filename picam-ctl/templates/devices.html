@@ -10,7 +10,7 @@
 {% for video_device in video_devices %}
 <div class="video-device">
     {% if video_device.device_config %}
-    <h3>{{ video_device.device_config['endpoint'] }}</h3>
+    <h3>rtsp://{{ hostname }}:8554{{ video_device.device_config['endpoint'] }}</h3>
     {% else %}
     <h3>Unassigned</h3>
     {% endif %}
@@ -29,7 +29,7 @@
 {% for audio_device in audio_devices %}
 <div class="video-device">
     {% if audio_device.device_config %}
-    <h3>{{ audio_device.device_config['endpoint'] }}</h3>
+    <h3>rtsp://{{ hostname }}:8554{{ audio_device.device_config['endpoint'] }}</h3>
     {% else %}
     <h3>Unassigned</h3>
     {% endif %}
@@ -38,7 +38,6 @@
     <div>Serial: {{ audio_device.serial }}</div>
     {% if audio_device.device_config %}
     <div>
-        <div>Device Config: {{ audio_device.device_config }}</div>
         <a href="/config-audio-device/{{ audio_device.serial }}">Edit Configuration</a>
     </div>
     {% elif audio_device.serial  %}

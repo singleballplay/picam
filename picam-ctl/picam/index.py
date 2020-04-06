@@ -34,6 +34,7 @@ class IndexHandler(MethodView):
                 device_settings.update({
                     'path': camera_path,
                     'device': device_serial,
+                    'type': video_configs[serial]['type']
                 })
                 video_devices.update({serial: device_settings})
         audio_devices = {}

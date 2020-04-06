@@ -121,6 +121,7 @@ def get_asound_devices(recordable_devices):
         idx += 2
     return devices
 
+
 def get_recordable_devices():
     cmd1 = subprocess.run(
         ('arecord', '--list-devices'),
@@ -148,11 +149,20 @@ def get_recordable_devices():
     return devices
 
 
+def find_serial(device_name):
+    cmd1 = subprocess.Popen(('/bin/udevadm', 'info', '--name={}'.format(device_name)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    cmd2 = subprocess.run(('grep', 'SERIAL_SHORT'), stdin=cmd1.stdout, stdout=subprocess.PIPE)
+    if cmd2.returncode == 0:
+        return cmd2.stdout.decode().strip().split('\n')[0].split('=')[1]
+    else:
+        return ''
+
+
 def find_audio_devices():
     video_devices = {}
     for video_device, device_info in find_video_devices().items():
         s = re.search(r'(usb[^\)]+)', device_info['description'])
-        if s and s.group(0):
+        if s:
             video_devices.update({
                 device_info['serial']: {
                     'usb_description': s.group(0),
@@ -239,17 +249,22 @@ def find_video_devices():
         ["v4l2-ctl", "--list-devices"],
         stdout=subprocess.PIPE
     ).stdout.decode().split('\n')
-    video_devices = [d.strip() for d in device_list if d]
+    video_devices = [d.strip() for d in device_list]
     devices = {}
-    idx = 0
-    while idx < len(video_devices):
+    while len(video_devices):
+        description = video_devices.pop(0)
+        device = video_devices.pop(0)
+        serial = find_serial(device)
         devices.update({
-            video_devices[idx + 1]: {
-                'serial': find_video_serial(video_devices[idx + 1]),
-                'description': video_devices[idx],
+            device: {
+                'serial': serial,
+                'description': description
             }
         })
-        idx += 2
+        while device != '' and len(video_devices):
+            device = video_devices.pop(0)
+        if len(video_devices) == 1:
+            break
     return devices
 
 
@@ -276,9 +291,12 @@ class DevicesHandler(MethodView):
                 'description': device_info['description'],
                 'device_config': audio_configs.get(serial, {}),
             })
+        cat_hostname = subprocess.run(('cat', '/etc/hostname'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        hostname = cat_hostname.stdout.decode().strip()
         model = {
             'video_devices': video_devices,
             'audio_devices': audio_devices,
+            'hostname': hostname,
         }
         return render_template('devices.html', **model)
 

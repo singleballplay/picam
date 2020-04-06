@@ -70,13 +70,17 @@ def find_video_devices():
     fetches devices from v4l2 and creates a dict with the device
     name as the key and the description in value
     """
-    device_list = subprocess.run(["v4l2-ctl", "--list-devices"], stdout=subprocess.PIPE).stdout.decode().split('\n')
-    video_devices = [d.strip() for d in device_list if d]
+    device_list = subprocess.run(
+        ["v4l2-ctl", "--list-devices"],
+        stdout=subprocess.PIPE
+    ).stdout.decode().split('\n')
+    video_devices = [d.strip() for d in device_list]
     devices = {}
-    idx = 0
-    while idx < len(video_devices):
-        description = video_devices[idx]
-        device = video_devices[idx + 1]
+    while len(video_devices):
+        description = video_devices.pop(0)
+        print(description)
+        device = video_devices.pop(0)
+        print(device)
         serial = find_serial(device)
         devices.update({
             device: {
@@ -84,7 +88,11 @@ def find_video_devices():
                 'description': description
             }
         })
-        idx += 2
+        while device != '' and len(video_devices):
+            device = video_devices.pop(0)
+        if len(video_devices) == 1:
+            break
+    print('returning {}'.format(devices))
     return devices.items()
 
 
@@ -177,31 +185,30 @@ def setup_logitech_device(serial):
     framerate = config_options.get('framerate', '30')
     width, height = config_options.get('resolution', '1280x720').split('x')
     video_format = (
-        "video/x-h264,width={},height={},framerate={}/1,profile=high "
-        "! h264parse config-interval=2 "
+        "video/x-h264,width={},height={},framerate={}/1,profile=main "
+        "! h264parse config-interval=1 "
         "! rtph264pay name=pay0 pt=96 "
     ).format(width, height, framerate)
-    if config_options['type'] in ['C922', 'BRIO']:
-        if config_options['encoding'] == 'x264enc':
-            keyframe_interval = 2 * framerate
-            video_format = (
-                "image/jpeg,width={},height={},framerate={}/1 "
-                "! jpegdec "
-                "! videoscale ! video/x-raw,width=1024,height=576 "
-                "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={} "
-                "! video/x-h264,profile=high "
-                "! h264parse config-interval=2 "
-                "! rtph264pay name=pay0 pt=96 "
-            ).format(width, height, framerate, keyframe_interval)
-        if config_options['encoding'] == 'vp8enc':
-            keyframe_interval = 2 * framerate
-            video_format = (
-                "image/jpeg,width={},height={},framerate={}/1 "
-                "! jpegdec "
-                "! videoscale ! video/x-raw,width=1024,height=576 "
-                "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={} target-bitrate=4000000 "
-                "! rtpvp8pay name=pay0 pt=96 "
-            ).format(width, height, framerate, keyframe_interval)
+    if config_options['encoding'] == 'x264enc':
+        keyframe_interval = 2 * framerate
+        video_format = (
+            "image/jpeg,width={},height={},framerate={}/1 "
+            "! jpegdec "
+            "! videoscale ! video/x-raw,width=1024,height=576 "
+            "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={} "
+            "! video/x-h264,profile=high "
+            "! h264parse config-interval=2 "
+            "! rtph264pay name=pay0 pt=96 "
+        ).format(width, height, framerate, keyframe_interval)
+    if config_options['encoding'] == 'vp8enc':
+        keyframe_interval = 2 * framerate
+        video_format = (
+            "image/jpeg,width={},height={},framerate={}/1 "
+            "! jpegdec "
+            "! videoscale ! video/x-raw,width=1024,height=576 "
+            "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={} target-bitrate=4000000 "
+            "! rtpvp8pay name=pay0 pt=96 "
+        ).format(width, height, framerate, keyframe_interval)
     if config_options['encoding'] == 'mjpeg':
         video_format = (
             "image/jpeg,width={},height={},framerate={}/1 "
@@ -248,6 +255,7 @@ for alsa_idx, description in find_audio_devices():
                     break
     if audio_path:
         launch = (
+            #'alsasrc device=hw:{alsa_idx} do-timestamp=true '
             'alsasrc device=hw:{alsa_idx} '
             '! audio/x-raw,rate={audio_rate} '
             '! queue ! voaacenc bitrate=160000 '

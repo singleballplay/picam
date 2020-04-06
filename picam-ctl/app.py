@@ -116,6 +116,9 @@ app.add_url_rule(
 
 if __name__ == '__main__':
     import subprocess
+    scaling_governor = app.picam_config.pi.get('scaling_governor', 'ondemand')
+    echo_str = 'echo {} > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'.format(scaling_governor)
+    cmd1 = subprocess.run(('sudo', 'sh', '-c', '{}'.format(echo_str)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     if app.picam_config.pi.get('wlan0_power', 'off') == 'off':
         cmd1 = subprocess.run(('sudo', 'iwconfig', 'wlan0', 'power', 'off'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
