@@ -152,13 +152,14 @@ def find_audio_devices():
     video_devices = {}
     for video_device, device_info in find_video_devices().items():
         s = re.search(r'(usb[^\)]+)', device_info['description'])
-        video_devices.update({
-            device_info['serial']: {
-                'usb_description': s.group(0),
-                'description': device_info['description'],
-                'video_device': video_device,
-            }
-        })
+        if s and s.group(0):
+            video_devices.update({
+                device_info['serial']: {
+                    'usb_description': s.group(0),
+                    'description': device_info['description'],
+                    'video_device': video_device,
+                }
+            })
     sound_devices = {}
     for snd_device in get_snd_devices():
         cmd1 = subprocess.Popen(
