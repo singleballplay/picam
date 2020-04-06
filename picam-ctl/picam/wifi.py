@@ -40,21 +40,23 @@ class WifiHandler(MethodView):
         psk = request.form.get('psk', None)
         if ssid and ssid != current_ssid:
             substitution = "s/ssid=\"{}\"/ssid=\"{}\"/".format(current_ssid, ssid)
-            print(substitution)
             cmd1 = subprocess.run(
                 ('sudo', 'sed', '-i', substitution, '/etc/wpa_supplicant/wpa_supplicant.conf'),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL
             )
             substitution = "s/psk=\"{}\"/psk=\"{}\"/".format(current_psk, psk)
-            print(substitution)
             cmd1 = subprocess.run(
                 ('sudo', 'sed', '-i', substitution, '/etc/wpa_supplicant/wpa_supplicant.conf'),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL
             )
+            print('current ssid: ' + current_ssid)
             if current_ssid == '':
-                wifi_section = 'network={{\n\tssid="{ssid}"\n\tpsk="{psk}"}}'.format(ssid=ssid, psk=psk)
+                wifi_section = 'network={{\n\tssid="{ssid}"\n\tpsk="{psk}"\n}}'.format(ssid=ssid, psk=psk)
+                ps = subprocess.Popen(('echo', wifi_section), stdout=subprocess.PIPE)
+                output = subprocess.check_output(('sudo', 'tee', '-a', '/etc/wpa_supplicant/wpa_supplicant.conf'), stdin=ps.stdout)
+                ps.wait()
 
         return redirect('/admin')
 
