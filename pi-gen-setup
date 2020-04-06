@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
+    # Raspberry Pi specific things
+
+    # ensure v4l2 can load the pi camera
+    echo 'bcm2835-v4l2' | sudo tee /etc/modules-load.d/pi_camera_module.conf
+
+    if [ "$(grep iwconfig /etc/rc.local)" == "" ]; then
+        # disable wlan0 power management for better latency
+        sudo sed -i '$iiwconfig wlan0 power off' /etc/rc.local
+    fi
+
+    if [ "$(grep scaling_governor /etc/rc.local)" == "" ]; then
+        # crank up cpu freq, seems to help with the Brio/4K Pro image quality
+        # not necessary for C920/C922
+        sudo sed -i '$iecho performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' /etc/rc.local
+    fi
+
+    if [ "$(grep tvservice /etc/rc.local)" == "" ]; then
+        # turn off power to hdmi to save a bit of power
+        sudo sed -i '$itvservice -o' /etc/rc.local
+    fi
+fi
+
+if [ -f "picam.yaml" ]; then
+    echo "config file exists"
+else
+    cp picam.yaml.empty picam.yaml
+fi
+
+# convenience scripts called from web admin page
+for f in $(ls bin)
+do
+    if [ ! -f "/usr/local/bin/${f}" ]; then
+        sudo ln -s "/home/pi/picam/bin/${f}" "/usr/local/bin/${f}"
+    fi
+done
+
+# configure nginx to redirect traffic to Flask app
+sudo cp default-site /etc/nginx/sites-available/default
+
+if [ ! -f "/lib/systemd/system/picam.service" ]; then
+    # load the picamera/webcam rtsp service
+    sudo ln -s /home/pi/picam/services/picam.service /lib/systemd/system/picam.service
+
+    # run the service on startup
+    sudo systemctl enable picam.service
+fi
+
+
+if [ ! -f "/lib/systemd/system/picam-ctl.service" ]; then
+    # load the webcam control service
+    sudo ln -s /home/pi/picam/services/picam-ctl.service /lib/systemd/system/picam-ctl.service
+
+    # run the service on startup
+    sudo systemctl enable picam-ctl.service
+fi
+
+echo "done"
