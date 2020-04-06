@@ -2,12 +2,15 @@
 
 For convenience, a prebuilt image is available. It is built using the pi-gen project to build a custom Raspbian Buster lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
 
-## Outdated: new build coming soon
-Download [picam.zip](https://drive.google.com/file/d/1XV0cs_vLUJpFhLJIByGtP0IOqVeAo0fj/view)
+Download [picam-v2.0.zip](https://drive.google.com/file/d/1HKm32xKHSeBSO_H_l44SzciU1XGtt487/view)
 
-SHA-256: 82103060a3e0966bc86106e5b9c018f823859d4577c44d31400cffd23e9fb83c
+SHA-256: 3ea77e4c58c59fe7ecc5e9c1184b87d8d3dee379fb06d9c3678a3d8d7fbb851e  2020-04-06-Raspbian-picam.img
 
-It is a good idea to visit the admin page in the website and run the 'Update Picam' to get the latest changes. The download image will periodically be updated but not as frequently as the code. Restart after updating. Future versions will check for updates but that feature is not currently implemented.
+It is a good idea to visit the admin page in the website and run the 'Update Picam' to get the latest changes. The downloaded image will periodically be updated but not as frequently as the code. Restart after updating. Future versions will check for updates but that feature is not currently implemented.
+
+IMPORTANT!
+
+If you have previously downloaded the Raspbian Stretch image, from about a year ago, you will need to download this new image and config the picam again. I'll be working on a more seemless way to upgrade in the future. This version should support the Raspberry Pi 4 now.
 
 # Install From Scratch
 
