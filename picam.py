@@ -117,16 +117,24 @@ def setup_camlink_device():
     else:
         logging.info('camlink not configured')
         return (None, None)
-    launch = 'v4l2src do-timestamp=true device={}'.format(video_device)
+    launch = 'v4l2src device={}'.format(video_device)
     framerate = config_options.get('framerate', '60')
     width, height = config_options.get('resolution', '1280x720').split('x')
-    video_format = (
-        "video/x-raw,width={},height={} "
-        "! videoscale ! video/x-raw,width=1024,height=576 "
-        "! x264enc speed-preset=superfast tune=zerolatency bitrate=5600 key-int-max=120 "
-        "! h264parse config-interval=2 "
-        "! rtph264pay name=pay0 pt=96"
-    ).format(width, height, framerate)
+    encoding = config_options.get('encoding', 'mjpeg')
+    if encoding == 'mjpeg':
+        video_format = (
+            "video/x-raw,width={},height={} "
+            "! jpegenc "
+            "! rtpjpegpay name=pay0 pt=96"
+        ).format(width, height, framerate)
+    if encoding in ['h264', 'x264enc']:
+        video_format = (
+            "video/x-raw,width={},height={} "
+            "! videoscale ! video/x-raw,width=1024,height=576 "
+            "! x264enc speed-preset=superfast tune=zerolatency bitrate=5600 key-int-max=120 "
+            "! h264parse config-interval=2 "
+            "! rtph264pay name=pay0 pt=96"
+        ).format(width, height, framerate)
     pipeline = '( {} ! {} )'.format(launch, video_format)
     mount_path = config_options['endpoint']
     return (pipeline, mount_path)

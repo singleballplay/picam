@@ -255,6 +255,8 @@ def find_video_devices():
         description = video_devices.pop(0)
         device = video_devices.pop(0)
         serial = find_serial(device)
+        if 'Cam Link' in description:
+            serial = 'CAMLINK'
         devices.update({
             device: {
                 'serial': serial,
