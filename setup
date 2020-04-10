@@ -16,8 +16,6 @@ sudo apt install -y \
     gstreamer1.0-alsa \
     gstreamer1.0-libav \
     gstreamer1.0-omx \
-    ntp \
-    ntpdate \
     nginx
 
 if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
