@@ -93,7 +93,7 @@ def find_video_devices():
     return devices.items()
 
 
-def setup_pi_camera_device():
+def setup_pi_camera_device(video_device):
     camera_settings = ','.join([
         'rotate=90',
         'iso_sensitivity_auto=0',
@@ -105,13 +105,13 @@ def setup_pi_camera_device():
     launch=(
         'v4l2src device={} extra-controls="c,{}" '
         '! video/x-h264,width=1280,height=720,framerate=30/1,profile=main'
-    ).format(camera_settings, video_device)
+    ).format(video_device, camera_settings)
     pipeline = '( {} ! h264parse config-interval=2 ! rtph264pay name=pay0 pt=96 )'.format(launch)
     mount_path = '/picam'
     return (pipeline, mount_path)
 
 
-def setup_camlink_device():
+def setup_camlink_device(video_device):
     if 'CAMLINK' in settings['video_devices']:
         config_options = settings['video_devices']['CAMLINK']
     else:
@@ -140,8 +140,29 @@ def setup_camlink_device():
     return (pipeline, mount_path)
 
 
-def setup_logitech_device(serial):
+def setup_generic_device(serial, video_device):
     config_options = settings['video_devices'][serial]
+    launch = 'v4l2src device={}'.format(video_device)
+    framerate = config_options.get('framerate', '30')
+    width, height = config_options.get('resolution', '1280x720').split('x')
+    launch = 'v4l2src device={}'.format(video_device)
+    video_format = (
+        "video/x-h264,width={},height={},framerate={}/1,profile=main "
+        "! h264parse config-interval=1 "
+        "! rtph264pay name=pay0 pt=96 "
+    ).format(width, height, framerate)
+    if config_options['encoding'] == 'mjpeg':
+        video_format = (
+            "image/jpeg,width={},height={},framerate={}/1 "
+            "! rtpjpegpay name=pay0 pt=26 "
+        ).format(width, height, framerate)
+    pipeline = '( {} ! {} )'.format(launch, video_format)
+    mount_path = config_options['endpoint']
+    return (pipeline, mount_path)
+
+
+
+def adjust_v4l2_options(config_options):
     v4l2_options = {
         'focus_auto': 0,
         'focus_absolute': 0,
@@ -186,7 +207,16 @@ def setup_logitech_device(serial):
     # in a specific order?
     for ctl in v4l2_ctls:
         adjust_video_settings(video_device, '{}={}'.format(ctl, v4l2_options[ctl]))
+
+
+def setup_uvc_device(serial, video_device):
+    config_options = settings['video_devices'][serial]
+    if config_options['type'] != 'UVC':
+        adjust_v4l2_options(config_options)
     launch = 'v4l2src device={}'.format(video_device)
+    if 'C920' == config_options['type']:
+        # better control over the iframe period, default is way too many seconds
+        launch = 'uvch264src device={} initial-bitrate=5000000 average-bitrate=5000000 auto-start=true iframe-period=2000 name=src0 src0.vidsrc'.format(video_device)
     framerate = config_options.get('framerate', '30')
     width, height = config_options.get('resolution', '1280x720').split('x')
     video_format = (
@@ -224,57 +254,61 @@ def setup_logitech_device(serial):
     return (pipeline, mount_path)
 
 
-# create the camera streams
-video_devices = find_video_devices()
-for video_device, device_info in video_devices:
-    pipeline = None
-    mount_path = None
-    if 'bcm2835-v4l2' in device_info['description']:
-        pipeline, mount_path = setup_pi_camera_device()
-    elif 'Cam Link' in device_info['description']:
-        pipeline, mount_path = setup_camlink_device()
-    elif device_info['serial'] in settings['video_devices'].keys():
-        pipeline, mount_path = setup_logitech_device(device_info['serial'])
-    if pipeline:
-        factory = GstRtspServer.RTSPMediaFactory()
-        factory.set_launch(pipeline)
-        factory.set_shared(True)
-        mounts.add_factory(mount_path, factory)
+def main():
+    # create the camera streams
+    video_devices = find_video_devices()
+    for video_device, device_info in video_devices:
+        pipeline = None
+        mount_path = None
+        if 'bcm2835-v4l2' in device_info['description']:
+            pipeline, mount_path = setup_pi_camera_device(video_device)
+        elif 'Cam Link' in device_info['description']:
+            pipeline, mount_path = setup_camlink_device(video_device)
+        elif device_info['serial'] in settings['video_devices'].keys():
+            pipeline, mount_path = setup_uvc_device(device_info['serial'], video_device)
+        if pipeline:
+            factory = GstRtspServer.RTSPMediaFactory()
+            factory.set_launch(pipeline)
+            factory.set_shared(True)
+            mounts.add_factory(mount_path, factory)
 
-# creates the audio streams
-for alsa_idx, description in find_audio_devices():
-    audio_rate = 32000
-    audio_path = None
-    audio_configs = settings['audio_devices']
-    if 'Snowball' in description:
-        audio_path = '/snowball-audio'
-        audio_rate = 48000
-    elif 'usb' in description:
-        audio_usb_device = re.search(r'(usb[^,]+)', description).group(0)
-        for video_device, device_info in video_devices:
-            s = re.search(r'(usb[^\)]+)', device_info['description'])
-            if s:
-                if audio_usb_device in s.group(0):
-                    serial = device_info['serial']
-                    if serial in audio_configs.keys():
-                        audio_path = audio_configs[serial]['endpoint']
-                        audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
-                        break
-    if audio_path:
-        launch = (
-            'alsasrc device=hw:{alsa_idx} '
-            '! audio/x-raw,rate={audio_rate} '
-            '! queue ! voaacenc bitrate=160000 '
-            '! rtpmp4apay name=pay0 pt=96'
-        ).format(
-            alsa_idx=alsa_idx,
-            audio_rate=audio_rate,
-        )
-        pipeline = '( {} )'.format(launch)
-        factory = GstRtspServer.RTSPMediaFactory()
-        factory.set_launch(pipeline)
-        factory.set_shared(True)
-        mounts.add_factory(audio_path, factory)
+    # creates the audio streams
+    for alsa_idx, description in find_audio_devices():
+        audio_rate = 32000
+        audio_path = None
+        audio_configs = settings['audio_devices']
+        if 'Snowball' in description:
+            audio_path = '/snowball-audio'
+            audio_rate = 48000
+        elif 'usb' in description:
+            audio_usb_device = re.search(r'(usb[^,]+)', description).group(0)
+            for video_device, device_info in video_devices:
+                s = re.search(r'(usb[^\)]+)', device_info['description'])
+                if s:
+                    if audio_usb_device in s.group(0):
+                        serial = device_info['serial']
+                        if serial in audio_configs.keys():
+                            audio_path = audio_configs[serial]['endpoint']
+                            audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
+                            break
+        if audio_path:
+            launch = (
+                'alsasrc device=hw:{alsa_idx} '
+                '! audio/x-raw,rate={audio_rate} '
+                '! queue ! voaacenc bitrate=160000 '
+                '! rtpmp4apay name=pay0 pt=96'
+            ).format(
+                alsa_idx=alsa_idx,
+                audio_rate=audio_rate,
+            )
+            pipeline = '( {} )'.format(launch)
+            factory = GstRtspServer.RTSPMediaFactory()
+            factory.set_launch(pipeline)
+            factory.set_shared(True)
+            mounts.add_factory(audio_path, factory)
 
-server.attach(None)
-mainloop.run()
+    server.attach(None)
+    mainloop.run()
+
+
+main()
