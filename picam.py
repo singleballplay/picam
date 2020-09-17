@@ -162,7 +162,7 @@ def setup_generic_device(serial, video_device):
 
 
 
-def adjust_v4l2_options(config_options):
+def adjust_v4l2_options(video_device, config_options):
     v4l2_options = {
         'focus_auto': 0,
         'focus_absolute': 0,
@@ -212,7 +212,7 @@ def adjust_v4l2_options(config_options):
 def setup_uvc_device(serial, video_device):
     config_options = settings['video_devices'][serial]
     if config_options['type'] != 'UVC':
-        adjust_v4l2_options(config_options)
+        adjust_v4l2_options(video_device, config_options)
     launch = 'v4l2src device={}'.format(video_device)
     if 'C920' == config_options['type']:
         # better control over the iframe period, default is way too many seconds
