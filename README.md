@@ -12,6 +12,29 @@ IMPORTANT!
 
 If you have previously downloaded the Raspbian Stretch image, from about a year ago, you will need to download this new image and config the picam again. I'll be working on a more seemless way to upgrade in the future. This version should support the Raspberry Pi 4 now.
 
+
+# OBS Sources
+
+To add them as sources in OBS I recommend adding the GStreamer plugin (https://github.com/fzwoch/obs-gstreamer) for the best results and configuration. While you can use the VLC or Media sources, they introduce too much latency to be usable and should be avoided.
+
+## Windows
+
+Download the obs-gstreamer.zip file from the latest release https://github.com/fzwoch/obs-gstreamer/releases and unzip it. Copy the obs-gstreamer.dll file in the windows folder to the plugins directory of OBS.
+
+For Windows installations, the GStreamer MinGW 64-bit runtime is required and can be downloaded from the GStreamer website. https://gstreamer.freedesktop.org/data/pkg/windows/1.18.5/mingw/gstreamer-1.0-mingw-x86_64-1.18.5.msi
+
+After installing the package, you will need to edit the Windows PATH environment variable for the OBS plugin to be able to find the necessary files. Assuming a default installation you should be able to add c:\gstreamer\1.0\mingw\bin to the user or system PATH variable.
+
+
+## Additional Notes
+
+If using a Logitech Brio/4K Pro, keep the exposure_auto setting at or below 200 to achieve full 60fps, use the gain setting instead to brighten up the image. Brightness and contrast can also do a bit there but don't over do those. On a USB 2.0 system the resolution is limited to 1280x720, if plugging into a USB 3.0+ port you should be able to run higher resolutions. You can use the zoom and pan/tilt settings to get closer if necessary and move the where the center is if zoomed in.
+
+If you are using a C920 for displays, consider bumping the exposure_auto setting to 300 or 400 to reduce the scan line effect and reduce the gain setting to compensate for the additional brightness. Play around with what works best.
+
+Consider running secondary cameras at a lower resolution if you are going to be composing them into a 1080p or 720p feed. That will save on bandwidth and CPU/GPU in the composition software like OBS. Again, play with it depending on the power of the streaming machine.
+
+
 # Install From Scratch
 
 ## Install Raspbian
@@ -90,15 +113,3 @@ For H.264 encoding:
 For MJPEG encoding:
 
     $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=100 ! queue ! rtpjpegdepay ! jpegdec ! autovideosink
-
-To add them as sources in OBS, add a new VLC Video Source. Uncheck all of the boxes and leave the stop when not visisble selected in the drop down. The cameras will turn off when not being viewed which saves on power if running on battery. Add a Path/URL to the playlist section and type in the RTSP location of the resource e.g. rtsp://hostname:8554/playfield.
-
-I recommend adding the GStreamer plugin for the best results and configuration. https://obsproject.com/forum/resources/obs-gstreamer.696/
-
-## Additional Notes
-
-If using a Logitech Brio/4K Pro, keep the exposure_auto setting at or below 200 to achieve full 60fps, use the gain setting instead to brighten up the image. Brightness and contrast can also do a bit there but don't over do those. On a USB 2.0 system the resolution is limited to 1280x720, if plugging into a USB 3.0+ port you should be able to run higher resolutions. You can use the zoom and pan/tilt settings to get closer if necessary and move the where the center is if zoomed in.
-
-If you are using a C920 for displays, consider bumping the exposure_auto setting to 300 or 400 to reduce the scan line effect and reduce the gain setting to compensate for the additional brightness. Play around with what works best.
-
-Consider running secondary cameras at a lower resolution if you are going to be composing them into a 1080p or 720p feed. That will save on bandwidth and CPU/GPU in the composition software like OBS. Again, play with it depending on the power of the streaming machine.
