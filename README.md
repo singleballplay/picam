@@ -2,9 +2,9 @@
 
 For convenience, a prebuilt image is available. It is built using the pi-gen project to build a custom Raspbian Buster lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
 
-Download [picam-v2.1.zip](https://drive.google.com/file/d/19fXkvyqRLcE_RVAXHOYaQtvDsRTa3AyP/view?usp=sharing)
+Download [picam-v2.2.0.zip](https://drive.google.com/file/d/1a_8T4dR8e5OtpjKOQdfaoxbDUSCD2V5A/view?usp=sharing)
 
-SHA-256: b1c2b4b4a384f0fbc625d851149df3e1dd0320cd8ee05b26d9de247b352384fd  2020-04-09-Raspbian-picam.img
+SHA-256: a8a585e98c43c90861c1cdd12675d5b5e889533797aa2f8ce8e4ec86ed2a941f  picam.img
 
 It is a good idea to visit the admin page in the website and run the 'Update Picam' to get the latest changes. The downloaded image will periodically be updated but not as frequently as the code. Restart after updating. Future versions will check for updates but that feature is not currently implemented.
 
