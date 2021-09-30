@@ -36,16 +36,40 @@ def adjust_video_settings(device, settings):
 
 
 def find_audio_devices():
-    cmd1 = subprocess.run(('cat', '/proc/asound/cards'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    device_list = cmd1.stdout.decode().strip().split('\n')
-    audio_devices = [d.strip() for d in device_list if d]
+    """
+    Look at all of the usb sound devices available and create a dict with the alsa index based
+    on the card id found and the serial if available.
+
+    Special cases can be handled here for devices like Snowballs and such that do not have serials
+    and only support one of that type connected to the Pi.
+    """
     devices = {}
-    idx = 0
-    while idx < len(audio_devices):
-        alsa_idx = audio_devices[idx].split(' ')[0]
-        devices.update({alsa_idx: audio_devices[idx + 1]})
-        idx += 2
-    return devices.items()
+    snd_cmd = subprocess.run(
+        ('ls', '-1', '/dev/snd/by-id'),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    usb_devices = snd_cmd.stdout.decode().strip().split('\n')
+    card_idx_pattern = re.compile('/sound/card(\d+)/')
+    for usb_device in usb_devices:
+        serial = None
+        card_idx = None
+        cmd1 = subprocess.run(
+            ('/bin/udevadm', 'info', '--name=/dev/snd/by-id/{}'.format(usb_device)),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        lines = cmd1.stdout.decode().strip().split('\n')
+        for line in lines:
+            if 'DEVPATH=' in line:
+                m = re.search(card_idx_pattern, line)
+                if m:
+                    card_idx = m.group(1)
+            elif 'SERIAL_SHORT=' in line:
+                serial = line.strip().split('=')[1]
+        if card_idx:
+            devices.update({card_idx: serial})
+    return devices
 
 
 def find_serial(device_name):
@@ -273,24 +297,13 @@ def main():
             mounts.add_factory(mount_path, factory)
 
     # creates the audio streams
-    for alsa_idx, description in find_audio_devices():
+    for alsa_idx, serial in find_audio_devices().items():
         audio_rate = 32000
         audio_path = None
         audio_configs = settings['audio_devices']
-        if 'Snowball' in description:
-            audio_path = '/snowball-audio'
-            audio_rate = 48000
-        elif 'usb' in description:
-            audio_usb_device = re.search(r'(usb[^,]+)', description).group(0)
-            for video_device, device_info in video_devices:
-                s = re.search(r'(usb[^\)]+)', device_info['description'])
-                if s:
-                    if audio_usb_device in s.group(0):
-                        serial = device_info['serial']
-                        if serial in audio_configs.keys():
-                            audio_path = audio_configs[serial]['endpoint']
-                            audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
-                            break
+        if serial in audio_configs.keys():
+            audio_path = audio_configs[serial]['endpoint']
+            audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
         if audio_path:
             launch = (
                 'alsasrc device=hw:{alsa_idx} '

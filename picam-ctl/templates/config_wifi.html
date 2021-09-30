@@ -19,11 +19,11 @@
         <label for="password">Psk</label>
         <input type="password" name="psk" id="psk" value="{{ psk }}"/>
     </div>
-    <div>
+    <div style="margin-top: 10px;">
         <input type="submit" name="submit" value="Update WiFi"/>
     </div>
 </form>
-<div style="margin-top: 20px;">
+<div style="margin-top: 60px;">
     <h3>Note</h3>
     <p>Some special characters may need to be delimited with a '\' before them like $.*[\^. If you have a complicated password with many special characters you will want to seach for "sed substitution escape characters" and see which ones need to be delimited.</p>
     <p><br/>Or directly edit the <i>/etc/wpa_supplicant/wpa_supplicant.conf</i> file on the Pi.</p>

@@ -2,47 +2,55 @@
 {% block title %}Devices{% endblock %}
 
 {% block header %}
-<h1>PiCam Devices</h1>
 {% endblock %}
 
 {% block main %}
-<h2>Video Devices</h2>
+<h1>Video Devices</h1>
 {% for video_device in video_devices %}
+{% if video_device.serial %}
 <div class="video-device">
-    {% if video_device.device_config %}
-    <h3>rtsp://{{ hostname }}:8554{{ video_device.device_config['endpoint'] }}</h3>
-    {% else %}
-    <h3>Unassigned</h3>
-    {% endif %}
-    <div>{{ video_device.description }}</div>
-    <div>Device: {{ video_device.device }}</div>
-    <div>Serial: {{ video_device.serial }}</div>
-    {% if video_device.device_config %}
-        <a href="/config-video-device/{{ video_device.serial }}">Edit Configuration</a>
-    {% else %}
-        <a href="/config-video-device/{{ video_device.serial }}">Configure Device</a>
-    {% endif %}
-    </div>
+    <fieldset>
+        {% if video_device.device_config %}
+        <h3>rtsp://{{ hostname }}:8554{{ video_device.device_config['endpoint'] }}</h3>
+        <legend>{{ video_device.device_config['endpoint'] }}</legend>
+        {% else %}
+        <legend>Unassigned</legend>
+        {% endif %}
+        <div>{{ video_device.description }}</div>
+        <div>Device: {{ video_device.device }}</div>
+        <div>Serial: {{ video_device.serial }}</div>
+        <div style="margin-top: 20px;">
+        {% if video_device.device_config %}
+            <a href="/config-video-device/{{ video_device.serial }}">Edit Configuration</a>
+        {% else %}
+            <a href="/config-video-device/{{ video_device.serial }}">Configure Device</a>
+        {% endif %}
+        </div>
+    </fieldset>
 </div>
+{% endif %}
 {% endfor %}
-<h2>Audio Devices</h2>
+<h1>Audio Devices</h1>
 {% for audio_device in audio_devices %}
 <div class="video-device">
-    {% if audio_device.device_config %}
-    <h3>rtsp://{{ hostname }}:8554{{ audio_device.device_config['endpoint'] }}</h3>
-    {% else %}
-    <h3>Unassigned</h3>
-    {% endif %}
-    <div>{{ audio_device.description }}</div>
-    <div>ALSA device: {{ audio_device.alsa_idx }}</div>
-    <div>Serial: {{ audio_device.serial }}</div>
-    {% if audio_device.device_config %}
-    <div>
-        <a href="/config-audio-device/{{ audio_device.serial }}">Edit Configuration</a>
-    </div>
-    {% elif audio_device.serial  %}
-    <div><a href="/config-audio-device/{{ audio_device.serial }}">Configure Device</a></div>
-    {% endif %}
+    <fieldset>
+        <legend>{{ audio_device.serial }}</legend>
+        {% if audio_device.device_config %}
+        <h3>rtsp://{{ hostname }}:8554{{ audio_device.device_config['endpoint'] }}</h3>
+        {% else %}
+        <h3>Unassigned</h3>
+        {% endif %}
+        <div>{{ audio_device.description }}</div>
+        <div>ALSA device: {{ audio_device.alsa_idx }}</div>
+        <div>Serial: {{ audio_device.serial }}</div>
+        <div style="margin-top: 20px;">
+        {% if audio_device.device_config %}
+            <a href="/config-audio-device/{{ audio_device.serial }}">Edit Configuration</a>
+        {% elif audio_device.serial  %}
+            <a href="/config-audio-device/{{ audio_device.serial }}">Configure Device</a>
+        {% endif %}
+        </div>
+    </fieldset>
 </div>
 {% endfor %}
 {% endblock %}

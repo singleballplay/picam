@@ -20,6 +20,7 @@ class WifiHandler(MethodView):
             'hostname': current_hostname,
             'ssid': current_ssid,
             'psk': '',
+            'menu': 'wifi',
         }
         return render_template('config_wifi.html', **model)
 

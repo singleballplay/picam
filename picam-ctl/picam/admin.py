@@ -38,6 +38,7 @@ class AdminHandler(MethodView):
     def get(self):
         model = {
             'scaling_governor': get_cpu_governor(),
+            'menu': 'admin',
         }
         return render_template('admin.html', **model)
 

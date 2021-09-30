@@ -26,20 +26,22 @@ class IndexHandler(MethodView):
         video_devices = {}
         video_configs = app.picam_config.video_devices
         audio_configs = app.picam_config.audio_devices
-        for device_serial, device_info in find_video_devices().items():
+        for video_device, device_info in find_video_devices().items():
             serial = device_info['serial']
-            device_settings = get_device_settings(device_serial)
+            device_settings = get_device_settings(video_device)
             if serial in video_configs.keys():
                 camera_path = video_configs[serial]['endpoint']
                 device_settings.update({
                     'path': camera_path,
-                    'device': device_serial,
-                    'type': video_configs[serial]['type']
+                    'device': video_device,
+                    'type': video_configs[serial]['type'],
+                    'v4l2_options': device_info['v4l2_options'],
                 })
                 video_devices.update({serial: device_settings})
         audio_devices = {}
         model = {
             'video_devices': video_devices,
-            'audio_devices': audio_devices
+            'audio_devices': audio_devices,
+            'menu': 'index',
         }
         return render_template('index.html', **model)

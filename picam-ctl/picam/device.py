@@ -105,6 +105,7 @@ def get_snd_devices():
     )
     return cmd1.stdout.decode().strip().split('\n')
 
+
 def get_asound_devices(recordable_devices):
     cmd1 = subprocess.run(
         ('cat', '/proc/asound/cards'),
@@ -159,53 +160,49 @@ def find_serial(device_name):
 
 
 def find_audio_devices():
-    video_devices = {}
-    for video_device, device_info in find_video_devices().items():
-        s = re.search(r'(usb[^\)]+)', device_info['description'])
-        if s:
-            video_devices.update({
-                device_info['serial']: {
-                    'usb_description': s.group(0),
-                    'description': device_info['description'],
-                    'video_device': video_device,
-                }
-            })
-    sound_devices = {}
-    for snd_device in get_snd_devices():
-        cmd1 = subprocess.Popen(
-            ('/bin/udevadm', 'info', '--name=/dev/snd/by-id/{}'.format(snd_device)),
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        cmd2 = subprocess.run(
-            ('grep', 'SERIAL_SHORT'),
-            stdin=cmd1.stdout, stdout=subprocess.PIPE
-        )
-        dev_serial_short = ''
-        if cmd2.returncode == 0:
-            dev_serial_short = cmd2.stdout.decode().strip().split('\n')[0].split('=')[1]
-        cmd1 = subprocess.Popen(
-            ('/bin/udevadm', 'info', '--name=/dev/snd/by-id/{}'.format(snd_device)),
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        cmd2 = subprocess.run(
-            ('grep', 'SERIAL'),
-            stdin=cmd1.stdout, stdout=subprocess.PIPE
-        )
-        dev_serial = ''
-        if cmd2.returncode == 0:
-            dev_serial = cmd2.stdout.decode().strip().split('\n')[0].split('=')[1]
+    """
+    Look at all of the usb sound devices available and create a dict with the alsa index based
+    on the card id found and the serial if available.
 
-        if dev_serial_short:
-            sound_devices.update({
-                dev_serial_short: {
-                    'alsa_idx': '',
-                    'snd_device': snd_device,
-                    'description': dev_serial,
+    Special cases can be handled here for devices like Snowballs and such that do not have serials
+    and only support one of that type connected to the Pi.
+    """
+    devices = {}
+    snd_cmd = subprocess.run(
+        ('ls', '-1', '/dev/snd/by-id'),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    usb_devices = snd_cmd.stdout.decode().strip().split('\n')
+    card_idx_pattern = re.compile('/sound/card(\d+)/')
+    for usb_device in usb_devices:
+        serial = None
+        card_idx = None
+        model = ''
+        cmd1 = subprocess.run(
+            ('/bin/udevadm', 'info', '--name=/dev/snd/by-id/{}'.format(usb_device)),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        lines = cmd1.stdout.decode().strip().split('\n')
+        for line in lines:
+            if 'DEVPATH=' in line:
+                m = re.search(card_idx_pattern, line)
+                if m:
+                    card_idx = m.group(1)
+            elif 'SERIAL_SHORT=' in line:
+                serial = line.strip().split('=')[1]
+            elif 'ID_MODEL=' in line:
+                model = line.strip().split('=')[1]
+                model = model.replace('_', ' ')
+        if card_idx and serial:
+            devices.update({
+                serial: {
+                    'alsa_idx': card_idx,
+                    'description': model,
                 }
             })
-    #recordable_devices = get_recordable_devices()
-    #asound_devices = get_asound_devices(recordable_devices)
-    return sound_devices
+    return devices
 
 
 def get_device_settings(video_device, webcam_type=None):
@@ -257,10 +254,19 @@ def find_video_devices():
         serial = find_serial(device)
         if 'Cam Link' in description:
             serial = 'CAMLINK'
+        v4l2_options_raw = subprocess.run(
+            ('v4l2-ctl', '--device={}'.format(device), '-l'),
+            stdout=subprocess.PIPE,
+        ).stdout.decode().split('\n')
+        v4l2_options = []
+        for raw_option in v4l2_options_raw:
+            elems = raw_option.strip().split(' ')
+            v4l2_options.append(elems[0])
         devices.update({
             device: {
                 'serial': serial,
-                'description': description
+                'description': description,
+                'v4l2_options': v4l2_options,
             }
         })
         while device != '' and len(video_devices):
@@ -299,6 +305,7 @@ class DevicesHandler(MethodView):
             'video_devices': video_devices,
             'audio_devices': audio_devices,
             'hostname': hostname,
+            'menu': 'devices',
         }
         return render_template('devices.html', **model)
 
@@ -317,26 +324,40 @@ class VideoDeviceHandler(MethodView):
         if request.method == 'GET':
             device_config = None
             video_configs = app.picam_config.video_devices
+            v4l2_options = []
             for video_device, device_info in find_video_devices().items():
                 if serial == device_info['serial']:
                     description = device_info['description']
                     device_config = video_configs.get(serial, {})
+                    v4l2_options = device_info['v4l2_options']
                     v4l2_settings.update(device_config.get('v4l2', {})),
             model = {
                 'serial': serial,
                 'video_device': serial,
                 'description': description,
                 'device_config': device_config,
+                'v4l2_options': v4l2_options,
                 'v4l2': v4l2_settings,
                 'message': '',
+                'menu': 'devices',
             }
             return render_template('config_video_device.html', **model)
 
     def post(self, serial):
-        v4l2_settings = V4L2_DEFAULTS.copy()
         if request.form.get('delete', None):
             del app.picam_config.video_devices[serial]
             return redirect('/devices')
+        video_devices = find_video_devices()
+        v4l2_options = []
+        for _, device_info in video_devices.items():
+            if device_info['serial'] == serial:
+                v4l2_options = device_info['v4l2_options']
+        v4l2_settings = V4L2_DEFAULTS.copy()
+        # prune out the settings that aren't available
+        keys = list(v4l2_settings.keys())
+        for k in keys:
+            if k not in v4l2_options:
+                del v4l2_settings[k]
         if not app.picam_config.video_devices.get(serial):
             app.picam_config.video_devices[serial] = dict()
         if not app.picam_config.video_devices.get('v4l2'):
@@ -377,6 +398,7 @@ class AudioDeviceHandler(MethodView):
             'serial': serial,
             'audio_device': serial,
             'device_config': device_config,
+            'menu': 'devices',
         }
         return render_template('config_audio_device.html', **model)
 

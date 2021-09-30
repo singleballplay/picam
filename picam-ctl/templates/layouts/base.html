@@ -11,10 +11,10 @@
     <body>
         <header>
             <div id="site-nav">
-                <a href="/">home</a>
-                <a href="/devices">devices</a>
-                <a href="/wifi">wifi</a>
-                <a href="/admin">admin</a>
+                <a href="/" class="{{ 'active-nav' if menu == 'index' else '' }}">home</a>
+                <a href="/devices" class="{{ 'active-nav' if menu == 'devices' else '' }}">devices</a>
+                <a href="/wifi" class="{{ 'active-nav' if menu == 'wifi' else '' }}">wifi</a>
+                <a href="/admin" class="{{ 'active-nav' if menu == 'admin' else '' }}">admin</a>
             </div>
             {% block header %}{% endblock %}
         </header>

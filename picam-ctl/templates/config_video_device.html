@@ -9,16 +9,16 @@
 <div class="video-device">
     <form name="update-video-config" method="POST" action="/config-video-device/{{ serial }}">
     <h2>{{ description }} [{{ serial }}]</h2>
-    <div id="{{ video_device }}" class="video-settings">
+    <div id="device-{{ video_device }}" class="video-settings">
         <fieldset>
             <legend>Camera Options</legend>
             <div class="video-control">
                 <label for="{{ video_device }}-endpoint">Endpoint</label>
-                <input type="text" value="{{ device_config['endpoint'] }}" name="{{ video_device }}-endpoint" id="{{ video_device }}-endpoint"/>
+                <input type="text" value="{{ device_config['endpoint'] }}" name="{{ video_device }}-endpoint" id="device-{{ video_device }}-endpoint"/>
             </div>
             <div class="video-control">
                 <label for="{{ video_device }}-type">Type</label>
-                <select name="{{ video_device }}-type" id="{{ video_device }}-type">
+                <select name="{{ video_device }}-type" id="device-{{ video_device }}-type">
                     <option value="C920" {{ 'selected' if device_config['type'] == 'C920' else '' }}>C920</option>
                     <option value="C922" {{ 'selected' if device_config['type'] == 'C922' else '' }}>C922</option>
                     <option value="BRIO" {{ 'selected' if device_config['type'] == 'BRIO' else '' }}>BRIO</option>
@@ -29,7 +29,7 @@
             </div>
             <div class="video-control">
                 <label for="{{ video_device }}-encoding">Encoding</label>
-                <select name="{{ video_device }}-encoding" id="{{ video_device }}-encoding">
+                <select name="{{ video_device }}-encoding" id="device-{{ video_device }}-encoding">
                     <option value="h264" {{ 'selected' if device_config['encoding'] == 'h264' else '' }}>h264</option>
                     <option value="mjpeg" {{ 'selected' if device_config['encoding'] == 'mjpeg' else '' }}>mjpeg</option>
                     <option value="x264enc" {{ 'selected' if device_config['encoding'] == 'x264enc' else '' }}>x264enc</option>
@@ -38,16 +38,16 @@
             </div>
             <div class="video-control">
                 <label for="{{ video_device }}-framerate">Framerate</label>
-                <select name="{{ video_device }}-framerate" id="{{ video_device }}-framerate">
-                    <option value="30" {{ 'selected' if device_config['framerate'] == 30 else '' }}>30</option>
+                <select name="{{ video_device }}-framerate" id="device-{{ video_device }}-framerate">
                     <option value="60" {{ 'selected' if device_config['framerate'] == 60 else '' }}>60</option>
-                    <option value="24" {{ 'selected' if device_config['framerate'] == 24 else '' }}>24</option>
+                    <option value="30" {{ 'selected' if device_config['framerate'] == 30 else '' }}>30</option>
                     <option value="48" {{ 'selected' if device_config['framerate'] == 48 else '' }}>48</option>
+                    <option value="24" {{ 'selected' if device_config['framerate'] == 24 else '' }}>24</option>
                 </select>
             </div>
             <div class="video-control">
                 <label for="{{ video_device }}-resolution">Resolution</label>
-                <select name="{{ video_device }}-resolution" id="{{ video_device }}-resolution">
+                <select name="{{ video_device }}-resolution" id="device-{{ video_device }}-resolution">
                     <option value="1920x1080" {{ 'selected' if device_config['resolution'] == '1920x1080' else '' }}>1920x1080</option>
                     <option value="1280x720" {{ 'selected' if device_config['resolution'] == '1280x720' else '' }}>1280x720</option>
                     <option value="1024x576" {{ 'selected' if device_config['resolution'] == '1024x576' else '' }}>1024x576</option>
@@ -61,96 +61,113 @@
         </fieldset>
         <fieldset>
             <legend>Camera Controls</legend>
+            {% if 'gain' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-gain">Gain</label>
-                <input type="number" min="0" max="255" value="{{ v4l2['gain'] }}" name="{{ video_device }}-gain" id="{{ video_device }}-gain" onchange="updateValue(this, '{{ video_device }}-range');" />
-                <input type="range" min="0" max="255" value="{{ v4l2['gain'] }}" name="{{ video_device }}-range" id="{{ video_device }}-range" oninput="updateValue(this, '{{ video_device }}-gain');" />
+                <input type="number" min="0" max="255" value="{{ v4l2['gain'] }}" name="{{ video_device }}-gain" id="device-{{ video_device }}-gain" onchange="updateValue(this, 'device-{{ video_device }}-range');" />
+                <input type="range" min="0" max="255" value="{{ v4l2['gain'] }}" name="{{ video_device }}-range" id="device-{{ video_device }}-range" oninput="updateValue(this, 'device-{{ video_device }}-gain');" />
             </div>
-
+            {% endif %}
+            {% if 'white_balance_temperature_auto' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-white_balance_temperature_auto">White Balance Auto</label>
-                <input type="checkbox" name="{{ video_device }}-white_balance_temperature_auto" {{ 'checked' if v4l2['white_balance_temperature_auto'] == '1' else '' }} id="{{ video_device }}-white_balance_temperature_auto"/>
+                <input type="checkbox" name="{{ video_device }}-white_balance_temperature_auto" {{ 'checked' if v4l2['white_balance_temperature_auto'] == '1' else '' }} id="device-{{ video_device }}-white_balance_temperature_auto"/>
             </div>
-
+            {% endif %}
+            {% if 'white_balance_temperature' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-white_balance_temperature">White Balance Temperature</label>
-                <input type="number" min="2000" max="6500" step="100" value="{{ v4l2['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature" id="{{ video_device }}-white_balance_temperature" onchange="updateValue(this, '{{ video_device }}-white_balance_temperature-range')" />
-                <input type="range" min="2000" max="6500" step="100" value="{{ v4l2['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature-range" id="{{ video_device }}-white_balance_temperature-range" oninput="updateValue(this, '{{ video_device }}-white_balance_temperature')" />
+                <input type="number" min="2000" max="6500" step="100" value="{{ v4l2['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature" id="device-{{ video_device }}-white_balance_temperature" onchange="updateValue(this, 'device-{{ video_device }}-white_balance_temperature-range')" />
+                <input type="range" min="2000" max="6500" step="100" value="{{ v4l2['white_balance_temperature'] }}" name="{{ video_device }}-white_balance_temperature-range" id="device-{{ video_device }}-white_balance_temperature-range" oninput="updateValue(this, 'device-{{ video_device }}-white_balance_temperature')" />
             </div>
-
+            {% endif %}
+            {% if 'exposure_auto' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-exposure_auto">Exposure Auto</label>
-                <input type="checkbox" name="{{ video_device }}-exposure_auto" {{ 'checked' if v4l2['exposure_auto'] == '3' else '' }} id="{{ video_device }}-exposure_auto"/>
+                <input type="checkbox" name="{{ video_device }}-exposure_auto" {{ 'checked' if v4l2['exposure_auto'] == '3' else '' }} id="device-{{ video_device }}-exposure_auto"/>
             </div>
-
+            {% endif %}
+            {% if 'exposure_auto_priority' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-exposure_auto_priority">Exposure Auto Priority</label>
-                <input type="checkbox" name="{{ video_device }}-exposure_auto_priority" {{ 'checked' if v4l2['exposure_auto_priority'] == '1' else '' }} id="{{ video_device }}-exposure_auto_priority"/>
+                <input type="checkbox" name="{{ video_device }}-exposure_auto_priority" {{ 'checked' if v4l2['exposure_auto_priority'] == '1' else '' }} id="device-{{ video_device }}-exposure_auto_priority"/>
             </div>
-
+            {% endif %}
+            {% if 'exposure_absolute' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-exposure_absolute">Exposure Absolute</label>
-                <input type="number" min="3" max="1600" value="{{ v4l2['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute" id="{{ video_device }}-exposure_absolute" onchange="updateValue(this, '{{ video_device }}-exposure_absolute-range')" />
-                <input type="range" min="3" max="1600" value="{{ v4l2['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute-range" id="{{ video_device }}-exposure_absolute-range" oninput="updateValue(this, '{{ video_device }}-exposure_absolute')" />
+                <input type="number" min="3" max="1600" value="{{ v4l2['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute" id="device-{{ video_device }}-exposure_absolute" onchange="updateValue(this, 'device-{{ video_device }}-exposure_absolute-range')" />
+                <input type="range" min="3" max="1600" value="{{ v4l2['exposure_absolute'] }}" name="{{ video_device }}-exposure_absolute-range" id="device-{{ video_device }}-exposure_absolute-range" oninput="updateValue(this, 'device-{{ video_device }}-exposure_absolute')" />
             </div>
-
+            {% endif %}
+            {% if 'brightness' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-brightness">Brightness</label>
-                <input type="number" min="0" max="255" value="{{ v4l2['brightness'] }}" name="{{ video_device }}-brightness" id="{{ video_device }}-brightness" onchange="updateValue(this, '{{ video_device }}-brightness-range')" />
-                <input type="range" min="0" max="255" value="{{ v4l2['brightness'] }}" name="{{ video_device }}-brightness-range" id="{{ video_device }}-brightness-range" oninput="updateValue(this, '{{ video_device }}-brightness')" />
+                <input type="number" min="0" max="255" value="{{ v4l2['brightness'] }}" name="{{ video_device }}-brightness" id="device-{{ video_device }}-brightness" onchange="updateValue(this, 'device-{{ video_device }}-brightness-range')" />
+                <input type="range" min="0" max="255" value="{{ v4l2['brightness'] }}" name="{{ video_device }}-brightness-range" id="device-{{ video_device }}-brightness-range" oninput="updateValue(this, 'device-{{ video_device }}-brightness')" />
             </div>
-
+            {% endif %}
+            {% if 'contrast' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-contrast">Contrast</label>
-                <input type="number" min="0" max="255" value="{{ v4l2['contrast'] }}" name="{{ video_device }}-contrast" id="{{ video_device }}-contrast" onchange="updateValue(this, '{{ video_device }}-contrast-range')" />
-                <input type="range" min="0" max="255" value="{{ v4l2['contrast'] }}" name="{{ video_device }}-contrast-range" id="{{ video_device }}-contrast-range" oninput="updateValue(this, '{{ video_device }}-contrast')" />
+                <input type="number" min="0" max="255" value="{{ v4l2['contrast'] }}" name="{{ video_device }}-contrast" id="device-{{ video_device }}-contrast" onchange="updateValue(this, 'device-{{ video_device }}-contrast-range')" />
+                <input type="range" min="0" max="255" value="{{ v4l2['contrast'] }}" name="{{ video_device }}-contrast-range" id="device-{{ video_device }}-contrast-range" oninput="updateValue(this, 'device-{{ video_device }}-contrast')" />
             </div>
-
+            {% endif %}
+            {% if 'saturation' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-saturation">Saturation</label>
-                <input type="number" min="0" max="255" value="{{ v4l2['saturation'] }}" name="{{ video_device }}-saturation" id="{{ video_device }}-saturation" onchange="updateValue(this, '{{ video_device }}-saturation-range')" />
-                <input type="range" min="0" max="255" value="{{ v4l2['saturation'] }}" name="{{ video_device }}-saturation-range" id="{{ video_device }}-saturation-range" oninput="updateValue(this, '{{ video_device }}-saturation')" />
+                <input type="number" min="0" max="255" value="{{ v4l2['saturation'] }}" name="{{ video_device }}-saturation" id="device-{{ video_device }}-saturation" onchange="updateValue(this, 'device-{{ video_device }}-saturation-range')" />
+                <input type="range" min="0" max="255" value="{{ v4l2['saturation'] }}" name="{{ video_device }}-saturation-range" id="device-{{ video_device }}-saturation-range" oninput="updateValue(this, 'device-{{ video_device }}-saturation')" />
             </div>
-
+            {% endif %}
+            {% if 'sharpness' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-sharpness">Sharpness</label>
-                <input type="number" min="0" max="255" value="{{ v4l2['sharpness'] }}" name="{{ video_device }}-sharpness" id="{{ video_device }}-sharpness" onchange="updateValue(this, '{{ video_device }}-sharpness-range')" />
-                <input type="range" min="0" max="255" value="{{ v4l2['sharpness'] }}" name="{{ video_device }}-sharpness-range" id="{{ video_device }}-sharpness-range" oninput="updateValue(this, '{{ video_device }}-sharpness')" />
+                <input type="number" min="0" max="255" value="{{ v4l2['sharpness'] }}" name="{{ video_device }}-sharpness" id="device-{{ video_device }}-sharpness" onchange="updateValue(this, 'device-{{ video_device }}-sharpness-range')" />
+                <input type="range" min="0" max="255" value="{{ v4l2['sharpness'] }}" name="{{ video_device }}-sharpness-range" id="device-{{ video_device }}-sharpness-range" oninput="updateValue(this, 'device-{{ video_device }}-sharpness')" />
             </div>
-
+            {% endif %}
+            {% if 'pan_absolute' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-pan_absolute">Pan Absolute</label>
-                <input type="number" min="-36000" max="36000" step="3600" value="{{ v4l2['pan_absolute'] }}" name="{{ video_device }}-pan_absolute" id="{{ video_device }}-pan_absolute" onchange="updateValue(this, '{{ video_device }}-pan_absolute-range')" />
-                <input type="range" min="-36000" max="36000" step="3600" value="{{ v4l2['pan_absolute'] }}" name="{{ video_device }}-pan_absolute-range" id="{{ video_device }}-pan_absolute-range" oninput="updateValue(this, '{{ video_device }}-pan_absolute')" />
+                <input type="number" min="-36000" max="36000" step="3600" value="{{ v4l2['pan_absolute'] }}" name="{{ video_device }}-pan_absolute" id="device-{{ video_device }}-pan_absolute" onchange="updateValue(this, 'device-{{ video_device }}-pan_absolute-range')" />
+                <input type="range" min="-36000" max="36000" step="3600" value="{{ v4l2['pan_absolute'] }}" name="{{ video_device }}-pan_absolute-range" id="device-{{ video_device }}-pan_absolute-range" oninput="updateValue(this, 'device-{{ video_device }}-pan_absolute')" />
             </div>
-
+            {% endif %}
+            {% if 'tilt_absolute' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-tilt_absolute">Tilt Absolute</label>
-                <input type="number" min="-36000" max="36000" step="3600" value="{{ v4l2['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute" id="{{ video_device }}-tilt_absolute" onchange="updateValue(this, '{{ video_device }}-tilt_absolute-range')" />
-                <input type="range" min="-36000" max="36000" step="3600" value="{{ v4l2['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute-range" id="{{ video_device }}-tilt_absolute-range" oninput="updateValue(this, '{{ video_device }}-tilt_absolute')" />
+                <input type="number" min="-36000" max="36000" step="3600" value="{{ v4l2['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute" id="device-{{ video_device }}-tilt_absolute" onchange="updateValue(this, 'device-{{ video_device }}-tilt_absolute-range')" />
+                <input type="range" min="-36000" max="36000" step="3600" value="{{ v4l2['tilt_absolute'] }}" name="{{ video_device }}-tilt_absolute-range" id="device-{{ video_device }}-tilt_absolute-range" oninput="updateValue(this, 'device-{{ video_device }}-tilt_absolute')" />
             </div>
-
+            {% endif %}
+            {% if 'backlight_compensation' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-backlight_compensation">Backlight Compensation</label>
-                <input type="checkbox" name="{{ video_device }}-backlight_compensation" {{ 'checked' if v4l2['backlight_compensation'] == '1' }} id="{{ video_device }}-backlight_compensation"/>
+                <input type="checkbox" name="{{ video_device }}-backlight_compensation" {{ 'checked' if v4l2['backlight_compensation'] == '1' }} id="device-{{ video_device }}-backlight_compensation"/>
             </div>
-
+            {% endif %}
+            {% if 'focus_auto' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-focus_auto">Focus Auto</label>
-                <input type="checkbox" name="{{ video_device }}-focus_auto" {{ 'checked' if v4l2['focus_auto'] == '1' }} id="{{ video_device }}-focus_auto"/>
+                <input type="checkbox" name="{{ video_device }}-focus_auto" {{ 'checked' if v4l2['focus_auto'] == '1' }} id="device-{{ video_device }}-focus_auto"/>
             </div>
-
+            {% endif %}
+            {% if 'focus_absolute' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-focus_absolute">Focus Absolute</label>
-                <input type="number" min="0" max="250" step="5" value="{{ v4l2['focus_absolute'] }}" name="{{ video_device }}-focus_absolute" id="{{ video_device }}-focus_absolute" onchange="updateValue(this, '{{ video_device }}-focus_absolute-range')" />
-                <input type="range" min="0" max="250" step="5" value="{{ v4l2['focus_absolute'] }}" name="{{ video_device }}-focus_absolute-range" id="{{ video_device }}-focus_absolute-range" oninput="updateValue(this, '{{ video_device }}-focus_absolute')" />
+                <input type="number" min="0" max="250" step="5" value="{{ v4l2['focus_absolute'] }}" name="{{ video_device }}-focus_absolute" id="device-{{ video_device }}-focus_absolute" onchange="updateValue(this, 'device-{{ video_device }}-focus_absolute-range')" />
+                <input type="range" min="0" max="250" step="5" value="{{ v4l2['focus_absolute'] }}" name="{{ video_device }}-focus_absolute-range" id="device-{{ video_device }}-focus_absolute-range" oninput="updateValue(this, 'device-{{ video_device }}-focus_absolute')" />
             </div>
-
+            {% endif %}
+            {% if 'zoom_absolute' in v4l2_options %}
             <div class="video-control">
                 <label for="{{ video_device }}-zoom_absolute">Zoom Absolute</label>
-                <input type="number" min="100" max="500" value="{{ v4l2['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute" id="{{ video_device }}-zoom_absolute" onchange="updateValue(this, '{{ video_device }}-zoom_absolute-range')" />
-                <input type="range" min="100" max="500" value="{{ v4l2['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute-range" id="{{ video_device }}-zoom_absolute-range" oninput="updateValue(this, '{{ video_device }}-zoom_absolute')" />
+                <input type="number" min="100" max="500" value="{{ v4l2['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute" id="device-{{ video_device }}-zoom_absolute" onchange="updateValue(this, 'device-{{ video_device }}-zoom_absolute-range')" />
+                <input type="range" min="100" max="500" value="{{ v4l2['zoom_absolute'] }}" name="{{ video_device }}-zoom_absolute-range" id="device-{{ video_device }}-zoom_absolute-range" oninput="updateValue(this, 'device-{{ video_device }}-zoom_absolute')" />
             </div>
+            {% endif %}
         </fieldset>
         <div id="system-controls">
             <div>
@@ -168,6 +185,157 @@
 
 {% block script %}
 function updateValue(elem, val) {
+    console.log(`updating ${elem} with ${val}`);
     document.getElementById(val).value = elem.value;
 }
+
+function createOptionElem(value, text) {
+    option_elem = document.createElement('option')
+    option_elem.setAttribute('value', value);
+    option_elem.innerHTML = text;
+    return option_elem;
+}
+
+device_type_options = {
+    'DEFAULT': {
+        'framerate': [
+            createOptionElem('60', '60'),
+            createOptionElem('48', '48'),
+            createOptionElem('30', '30'),
+            createOptionElem('24', '24'),
+        ],
+        'encoding': [
+            createOptionElem('mjpeg', 'mjpeg'),
+            createOptionElem('h264', 'h264'),
+            createOptionElem('x264enc', 'x264enc'),
+        ],
+        'resolution': [
+            createOptionElem('1920x1080', '1920x1080'),
+            createOptionElem('1280x720', '1280x720'),
+        ]
+    },
+    'C920': {
+        'framerate': [
+            createOptionElem('30', '30'),
+            createOptionElem('24', '24'),
+        ],
+        'encoding': [
+            createOptionElem('mjpeg', 'mjpeg'),
+            createOptionElem('h264', 'h264'),
+        ],
+        'resolution': [
+            createOptionElem('1920x1080', '1920x1080'),
+            createOptionElem('1280x720', '1280x720'),
+        ]
+    },
+    'C922': {
+        'framerate': [
+            createOptionElem('60', '60'),
+            createOptionElem('48', '48'),
+            createOptionElem('30', '30'),
+            createOptionElem('24', '24'),
+        ],
+        'encoding': [
+            createOptionElem('mjpeg', 'mjpeg'),
+            createOptionElem('x264enc', 'x264enc'),
+        ],
+        'resolution': [
+            createOptionElem('1920x1080', '1920x1080'),
+            createOptionElem('1280x720', '1280x720'),
+        ]
+    },
+    'BRIO': {
+        'framerate': [
+            createOptionElem('60', '60'),
+            createOptionElem('48', '48'),
+            createOptionElem('30', '30'),
+            createOptionElem('24', '24'),
+        ],
+        'encoding': [
+            createOptionElem('mjpeg', 'mjpeg'),
+            createOptionElem('x264enc', 'x264enc'),
+        ],
+        'resolution': [
+            createOptionElem('1920x1080', '1920x1080'),
+            createOptionElem('1280x720', '1280x720'),
+            createOptionElem('1024x576', '1024x576'),
+            createOptionElem('640x360', '640x360'),
+            createOptionElem('960x720', '960x720'),
+        ]
+    },
+    'CAMLINK': {
+        'framerate': [
+            createOptionElem('60', '60'),
+            createOptionElem('30', '30'),
+        ],
+        'encoding': [
+            createOptionElem('mjpeg', 'mjpeg'),
+            createOptionElem('x264enc', 'x264enc'),
+        ],
+        'resolution': [
+            createOptionElem('1920x1080', '1920x1080'),
+            createOptionElem('1280x720', '1280x720'),
+        ]
+    },
+};
+
+function updateEncodingOptions(device_id, type) {
+    options_elem = document.querySelector(`#${device_id}-encoding`);
+
+    // clear out the old options
+    while (options_elem.firstChild) {
+        options_elem.removeChild(options_elem.lastChild);
+    }
+
+    var allowed_options = device_type_options['DEFAULT']['encoding'];
+    switch(type) {
+        case 'C920':
+        case 'C922':
+        case 'BRIO':
+        case 'CAMLINK':
+            allowed_options = device_type_options[type]['encoding'];
+            break;
+    };
+
+    // put in the new options
+    for (const allowed_option of allowed_options) {
+        options_elem.appendChild(allowed_option);
+    }
+};
+
+function updateFramerateOptions(device_id, type, resolution) {
+    options_elem = document.querySelector(`#${device_id}-framerate`);
+
+    // clear out the old options
+    while (options_elem.firstChild) {
+        options_elem.removeChild(options_elem.lastChild);
+    }
+
+    // put in the new options
+    for (const allowed_option of allowed_options) {
+        options_elem.appendChild(allowed_option);
+    }
+}
+
+function updateResolutionOptions(device_id, type) {
+    options_elem = document.querySelector(`#${device_id}-resolution`);
+
+    // clear out the old options
+    while (options_elem.firstChild) {
+        options_elem.removeChild(options_elem.lastChild);
+    }
+
+    // put in the new options
+    for (const allowed_option of allowed_options) {
+        options_elem.appendChild(allowed_option);
+    }
+}
+
+function updateCameraOptions(event) {
+    camera_type = event.target.value;
+    device_id = event.target.id.slice(0, -('-type'.length));
+    updateEncodingOptions(device_id, camera_type);
+}
+
+document.querySelector("#device-{{ video_device }}-type").onchange = updateCameraOptions;
 {% endblock %}
