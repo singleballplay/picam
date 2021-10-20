@@ -4,6 +4,7 @@ import logging
 import subprocess
 import yaml
 import re
+import os
 
 import gi
 gi.require_version('Gst','1.0')
@@ -82,7 +83,8 @@ def find_serial(device_name):
 
 
 settings = None
-with open('/home/pi/picam/picam.yaml', 'r') as settings_file:
+script_dir = os.path.dirname(__file__)
+with open(f'{script_dir}/picam.yaml', 'r') as settings_file:
     try:
         settings = yaml.safe_load(settings_file)
     except:
@@ -135,22 +137,22 @@ def setup_pi_camera_device(video_device):
     return (pipeline, mount_path)
 
 
-def setup_camlink_device(video_device):
-    if 'CAMLINK' in settings['video_devices']:
-        config_options = settings['video_devices']['CAMLINK']
-    else:
+def setup_camlink_device(serial, video_device):
+    config_options = settings['video_devices'][serial]
+    if config_options['type'] != 'CAMLINK':
         logging.info('camlink not configured')
         return (None, None)
     launch = 'v4l2src device={}'.format(video_device)
     framerate = config_options.get('framerate', '60')
     width, height = config_options.get('resolution', '1280x720').split('x')
     encoding = config_options.get('encoding', 'mjpeg')
-    if encoding == 'mjpeg':
+    if encoding in ['mjpeg', 'jpegenc']:
         video_format = (
             "video/x-raw,width={},height={} "
+            #"video/x-raw,width={},height={},framerate=7013/117 "
             "! jpegenc "
             "! rtpjpegpay name=pay0 pt=96"
-        ).format(width, height, framerate)
+        ).format(width, height)
     if encoding in ['h264', 'x264enc']:
         video_format = (
             "video/x-raw,width={},height={} "
@@ -235,7 +237,7 @@ def adjust_v4l2_options(video_device, config_options):
 
 def setup_uvc_device(serial, video_device):
     config_options = settings['video_devices'][serial]
-    if config_options['type'] != 'UVC':
+    if config_options['type'] not in ['UVC', 'CAMLINK']:
         adjust_v4l2_options(video_device, config_options)
     launch = 'v4l2src device={}'.format(video_device)
     if 'C920' == config_options['type']:
@@ -286,10 +288,15 @@ def main():
         mount_path = None
         if 'bcm2835-v4l2' in device_info['description']:
             pipeline, mount_path = setup_pi_camera_device(video_device)
-        elif 'Cam Link' in device_info['description']:
-            pipeline, mount_path = setup_camlink_device(video_device)
         elif device_info['serial'] in settings['video_devices'].keys():
-            pipeline, mount_path = setup_uvc_device(device_info['serial'], video_device)
+            serial = device_info['serial']
+            config_options = settings['video_devices'][serial]
+            if config_options['type'] == 'CAMLINK':
+                pipeline, mount_path = setup_camlink_device(serial, video_device)
+            else:
+                pipeline, mount_path = setup_uvc_device(serial, video_device)
+        elif 'Cam Link' in device_info['description']:
+            pipeline, mount_path = setup_camlink_device('CAMLINK', video_device)
         if pipeline:
             factory = GstRtspServer.RTSPMediaFactory()
             factory.set_launch(pipeline)

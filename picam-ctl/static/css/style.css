@@ -21,6 +21,10 @@ fieldset {
     border: 1px solid #ccc;
 }
 
+legend {
+    font-size: 24px;
+}
+
 input, button, select {
     font-size: 16px;
     padding: 0.5em 0.75em;
@@ -132,4 +136,13 @@ header div {
 
 .settings-value {
     border: 1px solid #ccc;
+}
+
+.grid2c {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.instructions-step {
+    margin-bottom: 10px;
 }

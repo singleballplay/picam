@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import yaml
+import os
 
 from flask import Flask
 
@@ -18,7 +19,8 @@ class PicamConfig:
         self.load_config()
 
     def load_config(self):
-        with open('/home/pi/picam/picam.yaml', 'r') as settings_file:
+        script_dir = os.path.dirname(__file__)
+        with open(f'{script_dir}/../picam.yaml', 'r') as settings_file:
             try:
                 settings = yaml.safe_load(settings_file)
                 self.video_devices = settings['video_devices']
@@ -33,7 +35,8 @@ class PicamConfig:
             audio_devices=self.audio_devices,
             pi=self.pi,
         )
-        with open('/home/pi/picam/picam.yaml', 'w') as settings_file:
+        script_dir = os.path.dirname(__file__)
+        with open(f'{script_dir}/../picam.yaml', 'w') as settings_file:
             yaml.dump(data, settings_file, default_flow_style=False)
 
 
@@ -116,17 +119,24 @@ app.add_url_rule(
 
 if __name__ == '__main__':
     import subprocess
-    scaling_governor = app.picam_config.pi.get('scaling_governor', 'ondemand')
-    echo_str = 'echo {} > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'.format(scaling_governor)
-    subprocess.run(('sudo', 'sh', '-c', '{}'.format(echo_str)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    cpu_info = subprocess.run(
+        ('grep', 'Raspberry Pi', '/proc/cpuinfo'),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    if cpu_info.returncode == 0:
+        # Pi specific tweaks
+        scaling_governor = app.picam_config.pi.get('scaling_governor', 'ondemand')
+        echo_str = 'echo {} > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'.format(scaling_governor)
+        subprocess.run(('sudo', 'sh', '-c', '{}'.format(echo_str)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
-    # unblock the wifi, assumes a valid country code has been set
-    subprocess.run(('sudo', 'rfkill', 'unblock', 'wifi'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        # unblock the wifi, assumes a valid country code has been set
+        subprocess.run(('sudo', 'rfkill', 'unblock', 'wifi'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
-    # turn off things that chew up power if they aren't needed
-    if app.picam_config.pi.get('wlan0_power', 'off') == 'off':
-        subprocess.run(('sudo', 'iwconfig', 'wlan0', 'power', 'off'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        # turn off things that chew up power if they aren't needed
+        if app.picam_config.pi.get('wlan0_power', 'off') == 'off':
+            subprocess.run(('sudo', 'iwconfig', 'wlan0', 'power', 'off'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
-    if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
-        subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
+            subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     app.run(host='0.0.0.0', threaded=True)

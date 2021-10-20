@@ -11,9 +11,43 @@ from flask import (
 from flask.views import MethodView
 
 
+def get_current_ssid():
+    cmd1 = subprocess.Popen(
+        ('sudo', 'cat', '/etc/wpa_supplicant/wpa_supplicant.conf'),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    cmd2 = subprocess.run(
+        ('grep', 'ssid'),
+        stdin=cmd1.stdout,
+        stdout=subprocess.PIPE,
+    )
+    if cmd2.returncode == 0:
+        return cmd2.stdout.decode().strip().split('=')[1][1:-1]
+    else:
+        return ''
+
+
+def get_current_psk():
+    cmd1 = subprocess.Popen(
+        ('sudo', 'cat', '/etc/wpa_supplicant/wpa_supplicant.conf'),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    cmd2 = subprocess.run(
+        ('grep', 'psk'),
+        stdin=cmd1.stdout,
+        stdout=subprocess.PIPE,
+    )
+    if cmd2.returncode == 0:
+        return cmd2.stdout.decode().strip().split('=')[1][1:-1]
+    else:
+        return ''
+
+
 class WifiHandler(MethodView):
     def get(self):
-        current_ssid = self.get_current_ssid()
+        current_ssid = get_current_ssid()
         cat_hostname = subprocess.run(('cat', '/etc/hostname'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         current_hostname = cat_hostname.stdout.decode().strip()
         model = {
@@ -32,11 +66,10 @@ class WifiHandler(MethodView):
             subprocess.run(
                 ('update-hostname', current_hostname, hostname),
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
             )
-
-        current_ssid = self.get_current_ssid()
-        current_psk = self.get_current_psk()
+        current_ssid = get_current_ssid()
+        current_psk = get_current_psk()
         ssid = request.form.get('ssid', None)
         psk = request.form.get('psk', None)
         if ssid and ssid != current_ssid:
@@ -52,39 +85,13 @@ class WifiHandler(MethodView):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL
             )
-            print('current ssid: ' + current_ssid)
             if current_ssid == '':
                 wifi_section = 'network={{\n\tssid="{ssid}"\n\tpsk="{psk}"\n}}'.format(ssid=ssid, psk=psk)
                 ps = subprocess.Popen(('echo', wifi_section), stdout=subprocess.PIPE)
-                output = subprocess.check_output(('sudo', 'tee', '-a', '/etc/wpa_supplicant/wpa_supplicant.conf'), stdin=ps.stdout)
+                output = subprocess.check_output(
+                    ('sudo', 'tee', '-a', '/etc/wpa_supplicant/wpa_supplicant.conf'),
+                    stdin=ps.stdout,
+                )
                 ps.wait()
-
         return redirect('/admin')
 
-    def get_current_ssid(self):
-        cmd1 = subprocess.Popen(
-            ('sudo', 'cat', '/etc/wpa_supplicant/wpa_supplicant.conf'),
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        cmd2 = subprocess.run(
-            ('grep', 'ssid'),
-            stdin=cmd1.stdout, stdout=subprocess.PIPE
-        )
-        if cmd2.returncode == 0:
-            return cmd2.stdout.decode().strip().split('=')[1][1:-1]
-        else:
-            return ''
-
-    def get_current_psk(self):
-        cmd1 = subprocess.Popen(
-            ('sudo', 'cat', '/etc/wpa_supplicant/wpa_supplicant.conf'),
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        cmd2 = subprocess.run(
-            ('grep', 'psk'),
-            stdin=cmd1.stdout, stdout=subprocess.PIPE
-        )
-        if cmd2.returncode == 0:
-            return cmd2.stdout.decode().strip().split('=')[1][1:-1]
-        else:
-            return ''

@@ -34,26 +34,10 @@
         -->
     </fieldset>
     <fieldset>
-        <legend>Misc</legend>
-        <form name="scaling-governor-form" method="POST" action="/scaling-governor">
-            <div>
-                <input type="submit" name="submit" value="Toggle CPU Governor"/>
-                <span id="scaling-governor-setting">{{ scaling_governor }}</span>
-            </div>
-        </form>
+        <legend>System Controls</legend>
         <form name="update-form" method="POST" action="/update-picam">
             <div>
                 <input type="submit" name="update-picam" value="Update Picam"/>
-            </div>
-        </form>
-        <form name="wifi-power-form" method="POST" action="/wifi-power">
-            <div>
-                <input type="submit" name="wifi-power" value="Disable WiFi Power Saving"/>
-            </div>
-        </form>
-        <form name="hdmi-toggle-form" method="POST" action="/hdmi">
-            <div>
-                <input type="submit" name="hdmi-toggle" value="Toggle HDMI Power"/>
             </div>
         </form>
         <form name="restart-form" method="POST" action="/restart-picam">
@@ -69,6 +53,41 @@
         <form name="shutdown-form" method="POST" action="/shutdown">
             <div>
                 <input type="submit" name="shutdown-pi" id="shutdown-pi" onclick="return confirm('Are you sure you want to shutdown?');" value="Shutdown Pi"/>
+            </div>
+        </form>
+    </fieldset>
+    <fieldset>
+        <legend>Raspberry Pi Controls</legend>
+        <form name="scaling-governor-form" method="POST" action="/scaling-governor" class="grid2c">
+            <div>
+                <input type="submit" name="submit" value="Toggle CPU Governor"/>
+            </div>
+            <div>
+                <ul>
+                    <li>ondemand{{ ' [active]' if scaling_governor == 'ondemand' else ''}}: adaptive cpu speed to save power</li>
+                    <li>performance{{ ' [active]' if scaling_governor == 'performance' else ''}}: run cpu at full speed</li>
+                </ul>
+            </div>
+        </form>
+        <form name="wifi-power-form" method="POST" action="/wifi-power" class="grid2c">
+            <div>
+                <input type="submit" name="wifi-power" value="Disable WiFi Power Saving" class="grid2c"/>
+            </div>
+            <div>
+                <ul>
+                    <li>disable for better wifi experience</li>
+                    <li>currently: {{ wifi_power }}</li>
+                </ul>
+            </div>
+        </form>
+        <form name="hdmi-toggle-form" method="POST" action="/hdmi" class="grid2c">
+            <div>
+                <input type="submit" name="hdmi-toggle" value="Toggle HDMI Power"/>
+            </div>
+            <div>
+                <ul>
+                    <li>save a small bit of power if you don't need the display</li>
+                </ul>
             </div>
         </form>
     </fieldset>
