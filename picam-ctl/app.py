@@ -10,6 +10,12 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.secret_key = 'picamsecret'
 
 
+def intersect(a, b):
+    return set(a).intersection(b)
+
+app.jinja_env.filters['intersect'] = intersect
+
+
 class PicamConfig:
     """
     Holds Picam configuration structure

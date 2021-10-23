@@ -389,29 +389,41 @@ class VideoDeviceHandler(MethodView):
                     v4l2_settings.update(device_config.get('v4l2', {}))
                     video_options = device_info.get('video_options', None)
                     break
+            encodings = video_options.keys()
+            resolutions = []
+            framerates = []
+            resolution = device_config.get('resolution', '1920x1080')
+            framerate = device_config.get('framerate', 30)
+            encoding = device_config.get('encoding', 'jpegenc')
             if not device_config:
-                # try to set the default configurations for known devices
-                if 'Logitech BRIO' in description:
-                    device_config.update({
-                        'type': 'BRIO',
-                        'resolution': '1920x1080',
-                        'framerate': 60,
-                        'encoding': 'mjpeg',
-                    })
-                elif 'Webcam C920' in description:
-                    device_config.update({
-                        'type': 'C920',
-                        'resolution': '1920x1080',
-                        'framerate': 30,
-                        'encoding': 'h264',
-                    })
+                if 'YUYV' in encodings:
+                    resolutions = video_options['YUYV'].keys()
+                    framerates = video_options['YUYV'][resolution]
+                if 'H264' in encodings:
+                    encoding = 'h264'
+                    resolutions = video_options['H264'].keys()
+                    framerates = video_options['H264'][resolution]
+                elif 'MJPG' in encodings:
+                    encoding = 'mjpeg'
+                    resolutions = video_options['MJPG'].keys()
+                    framerates = video_options['MJPG'][resolution]
+                if 60 in framerates:
+                    framerate = 60
+                device_config.update({
+                    'resolution': resolution,
+                    'framerate': framerate,
+                    'encoding': encoding,
+                })
+            else:
+                if encoding == 'h264':
+                    resolutions = video_options['H264'].keys()
+                    framerates = video_options['H264'][resolution]
+                elif encoding == 'mjpeg':
+                    resolutions = video_options['MJPG'].keys()
+                    framerates = video_options['MJPG'][resolution]
                 else:
-                    device_config.update({
-                        'type': 'UVC',
-                        'resolution': '1920x1080',
-                        'framerate': 30,
-                        'encoding': 'jpegenc',
-                    })
+                    resolutions = video_options['YUYV'].keys()
+                    framerates = video_options['YUYV'][resolution]
             model = {
                 'serial': serial,
                 'video_device': serial,
@@ -420,6 +432,8 @@ class VideoDeviceHandler(MethodView):
                 'v4l2_options': v4l2_options,
                 'v4l2': v4l2_settings,
                 'video_options': video_options,
+                'resolutions': resolutions,
+                'framerates': framerates,
                 'message': '',
                 'menu': 'devices',
             }
