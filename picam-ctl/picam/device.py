@@ -385,8 +385,14 @@ class VideoDeviceHandler(MethodView):
             encoding = device_config.get('encoding', 'jpegenc')
             if not device_config:
                 if 'YUYV' in encodings:
-                    resolutions = video_options['YUYV'].keys()
+                    resolutions = list(video_options['YUYV'].keys())
+                    if resolution not in resolutions:
+                        resolution = resolutions[0]
+                        device_config.update({'resolution']: resolutions[0]})
                     framerates = video_options['YUYV'][resolution]
+                    if str(framerate) not in [str(f) for f in framerates]:
+                        framerate = framerates[0]
+                        device_config.update({'framerate': framerate})
                 if 'H264' in encodings:
                     encoding = 'h264'
                     resolutions = video_options['H264'].keys()
