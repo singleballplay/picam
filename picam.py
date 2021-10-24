@@ -19,6 +19,15 @@ server = GstRtspServer.RTSPServer()
 mounts = server.get_mount_points()
 
 
+settings = None
+script_dir = os.path.dirname(__file__)
+with open(f'{script_dir}/picam.yaml', 'r') as settings_file:
+    try:
+        settings = yaml.safe_load(settings_file)
+    except:
+        print('failed to parse settings file')
+
+
 def adjust_video_settings(device, settings):
     """
     Adjusts the settings for a given webcam
@@ -44,6 +53,7 @@ def find_audio_devices():
     Special cases can be handled here for devices like Snowballs and such that do not have serials
     and only support one of that type connected to the Pi.
     """
+    logging.info('finding audio devices available')
     devices = {}
     snd_cmd = subprocess.run(
         ('ls', '-1', '/dev/snd/by-id'),
@@ -70,11 +80,22 @@ def find_audio_devices():
                 serial = line.strip().split('=')[1]
         if card_idx:
             devices.update({card_idx: serial})
+    logging.info(f'found {len(devices.keys())} audio devices')
     return devices
 
 
 def find_serial(device_name):
-    cmd1 = subprocess.Popen(('/bin/udevadm', 'info', '--name={}'.format(device_name)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    """
+    Look for a serial in the info for the device. Not all devices report serials.
+
+    Args:
+        device: the v4l2 device e.g. /dev/video0
+    """
+    cmd1 = subprocess.Popen(
+        ('/bin/udevadm', 'info', '--name={}'.format(device_name)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
     cmd2 = subprocess.run(('grep', 'SERIAL_SHORT'), stdin=cmd1.stdout, stdout=subprocess.PIPE)
     if cmd2.returncode == 0:
         return cmd2.stdout.decode().strip().split('\n')[0].split('=')[1]
@@ -82,20 +103,12 @@ def find_serial(device_name):
         return ''
 
 
-settings = None
-script_dir = os.path.dirname(__file__)
-with open(f'{script_dir}/picam.yaml', 'r') as settings_file:
-    try:
-        settings = yaml.safe_load(settings_file)
-    except:
-        print('failed to parse settings file')
-
-
 def find_video_devices():
     """
     fetches devices from v4l2 and creates a dict with the device
     name as the key and the description in value
     """
+    logging.info('finding video devices available')
     device_list = subprocess.run(
         ["v4l2-ctl", "--list-devices"],
         stdout=subprocess.PIPE
@@ -116,10 +129,19 @@ def find_video_devices():
             device = video_devices.pop(0)
         if len(video_devices) == 1:
             break
+    logging.info(f'found {len(devices.keys())} video devices')
     return devices.items()
 
 
 def setup_pi_camera_device(video_device):
+    """
+    Creates a gstreamer pipeline for the built in pi camera module.
+    Uses the built in encoder; limited to 60fps.
+
+    Args:
+        video_device: the v4l2 device e.g. /dev/video0
+    """
+    logging.info(f'setting up pi camera module')
     camera_settings = ','.join([
         'rotate=90',
         'iso_sensitivity_auto=0',
@@ -137,41 +159,36 @@ def setup_pi_camera_device(video_device):
     return (pipeline, mount_path)
 
 
-def setup_camlink_device(serial, video_device):
-    config_options = settings['video_devices'][serial]
-    if config_options['type'] != 'CAMLINK':
-        logging.info('camlink not configured')
-        return (None, None)
-    launch = 'v4l2src device={}'.format(video_device)
-    framerate = config_options.get('framerate', '60')
-    width, height = config_options.get('resolution', '1280x720').split('x')
-    encoding = config_options.get('encoding', 'mjpeg')
-    if encoding in ['mjpeg', 'jpegenc']:
-        video_format = (
-            "video/x-raw,width={},height={} "
-            #"video/x-raw,width={},height={},framerate=7013/117 "
-            "! jpegenc "
-            "! rtpjpegpay name=pay0 pt=96"
-        ).format(width, height)
-    if encoding in ['h264', 'x264enc']:
-        video_format = (
-            "video/x-raw,width={},height={} "
-            "! videoscale ! video/x-raw,width=1024,height=576 "
-            "! x264enc speed-preset=superfast tune=zerolatency bitrate=5600 key-int-max=120 "
-            "! h264parse config-interval=2 "
-            "! rtph264pay name=pay0 pt=96"
-        ).format(width, height, framerate)
-    pipeline = '( {} ! {} )'.format(launch, video_format)
-    mount_path = config_options['endpoint']
-    return (pipeline, mount_path)
+def setup_uvc_device(serial, video_device, config_options):
+    """
+    Creates gstreamer pipeline for the video device.
 
-
-def setup_generic_device(serial, video_device):
-    config_options = settings['video_devices'][serial]
-    launch = 'v4l2src device={}'.format(video_device)
+    Args:
+        serial: the serial of the device
+        video_device: the v4l2 device e.g. /dev/video0
+        config_options: the device config options which include the v4l2 configs
+    """
+    logging.info(f'setting up video device {video_device}')
+    # run through all of the options and set the "auto" flags first
+    # errors can happen if setting "absolute" values if corresponding "auto" isn't set properly
+    for ctl, val in config_options.get('v4l2', {}).items():
+        if ctl.endswith('_auto'):
+            adjust_video_settings(video_device, '{}={}'.format(ctl, val))
+    for ctl, val in config_options.get('v4l2', {}).items():
+        if ctl in ('exposure_absolute', 'focus_absolute', 'white_balance_temperature'):
+            if ctl == 'exposure_absolute' and config_options['v4l2'].get('exposure_auto', 0):
+                continue
+            elif ctl == 'focus_absolute' and config_options['v4l2'].get('focus_auto', 0):
+                continue
+            elif ctl == 'white_balance_temperature' and config_options['v4l2'].get('white_balance_temperature_auto', 0):
+                continue
+        adjust_video_settings(video_device, '{}={}'.format(ctl, val))
     framerate = config_options.get('framerate', '30')
     width, height = config_options.get('resolution', '1280x720').split('x')
     launch = 'v4l2src device={}'.format(video_device)
+    if config_options['encoding'] == 'h264':
+        # better control over the iframe period, default is way too many seconds
+        launch = 'uvch264src device={} initial-bitrate=5000000 average-bitrate=5000000 auto-start=true iframe-period=1000 name=src0 src0.vidsrc'.format(video_device)
     video_format = (
         "video/x-h264,width={},height={},framerate={}/1,profile=main "
         "! h264parse config-interval=1 "
@@ -182,105 +199,42 @@ def setup_generic_device(serial, video_device):
             "image/jpeg,width={},height={},framerate={}/1 "
             "! rtpjpegpay name=pay0 pt=26 "
         ).format(width, height, framerate)
-    pipeline = '( {} ! {} )'.format(launch, video_format)
-    mount_path = config_options['endpoint']
-    return (pipeline, mount_path)
-
-
-
-def adjust_v4l2_options(video_device, config_options):
-    v4l2_options = {
-        'focus_auto': 0,
-        'focus_absolute': 0,
-        'exposure_auto': 1,
-        'exposure_auto_priority': 0,
-        'exposure_absolute': 200,
-        'brightness': 128,
-        'contrast': 128,
-        'saturation': 128,
-        'sharpness': 128,
-        'gain': 96,
-        'backlight_compensation': 0,
-        'white_balance_temperature_auto': 0,
-        'white_balance_temperature': 4400,
-        'pan_absolute': 0,
-        'tilt_absolute': 0,
-        'zoom_absolute': 100,
-    }
-    v4l2_ctls = [
-        'focus_auto',
-        'focus_absolute',
-        'exposure_auto',
-        'exposure_auto_priority',
-        'exposure_absolute',
-        'brightness',
-        'contrast',
-        'saturation',
-        'sharpness',
-        'gain',
-        'backlight_compensation',
-        'white_balance_temperature_auto',
-        'white_balance_temperature',
-        'pan_absolute',
-        'tilt_absolute',
-        'zoom_absolute',
-    ]
-    if 'v4l2' in config_options.keys():
-        for k, v in config_options['v4l2'].items():
-            v4l2_options.update({k: v})
-    #camera_settings = ','.join(['{}={}'.format(k, v) for k, v in v4l2_options.items()])
-    # tried setting them all at once, but that seems to fail often, do them
-    # in a specific order?
-    for ctl in v4l2_ctls:
-        adjust_video_settings(video_device, '{}={}'.format(ctl, v4l2_options[ctl]))
-
-
-def setup_uvc_device(serial, video_device):
-    config_options = settings['video_devices'][serial]
-    if config_options['type'] not in ['UVC', 'CAMLINK']:
-        adjust_v4l2_options(video_device, config_options)
-    launch = 'v4l2src device={}'.format(video_device)
-    if 'C920' == config_options['type']:
-        # better control over the iframe period, default is way too many seconds
-        launch = 'uvch264src device={} initial-bitrate=5000000 average-bitrate=5000000 auto-start=true iframe-period=2000 name=src0 src0.vidsrc'.format(video_device)
-    framerate = config_options.get('framerate', '30')
-    width, height = config_options.get('resolution', '1280x720').split('x')
-    video_format = (
-        "video/x-h264,width={},height={},framerate={}/1,profile=main "
-        "! h264parse config-interval=1 "
-        "! rtph264pay name=pay0 pt=96 "
-    ).format(width, height, framerate)
-    if config_options['encoding'] == 'x264enc':
+    elif config_options['encoding'] == 'jpegenc':
+        video_format = (
+            # wonky decimal framerate sometimes if not plan 60
+            #"video/x-raw,width={},height={},framerate=7013/117 "
+            "video/x-raw,width={},height={} "
+            "! jpegenc "
+            "! rtpjpegpay name=pay0 pt=96"
+        ).format(width, height)
+    elif config_options['encoding'] == 'x264enc':
+        # scale video down to get enough performance out of the software encoder
+        # slight quality hit at the expense of latency
         keyframe_interval = 2 * framerate
         video_format = (
-            "image/jpeg,width={},height={},framerate={}/1 "
-            "! jpegdec "
+            "video/x-raw,width={},height={},framerate={}/1 "
             "! videoscale ! video/x-raw,width=1024,height=576 "
             "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={} "
             "! video/x-h264,profile=high "
             "! h264parse config-interval=2 "
             "! rtph264pay name=pay0 pt=96 "
         ).format(width, height, framerate, keyframe_interval)
-    if config_options['encoding'] == 'vp8enc':
+    elif config_options['encoding'] == 'vp8enc':
         keyframe_interval = 2 * framerate
         video_format = (
-            "image/jpeg,width={},height={},framerate={}/1 "
+            "video/x-raw,width={},height={},framerate={}/1 "
             "! jpegdec "
             "! videoscale ! video/x-raw,width=1024,height=576 "
             "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={} target-bitrate=4000000 "
             "! rtpvp8pay name=pay0 pt=96 "
         ).format(width, height, framerate, keyframe_interval)
-    if config_options['encoding'] == 'mjpeg':
-        video_format = (
-            "image/jpeg,width={},height={},framerate={}/1 "
-            "! rtpjpegpay name=pay0 pt=26 "
-        ).format(width, height, framerate)
     pipeline = '( {} ! {} )'.format(launch, video_format)
     mount_path = config_options['endpoint']
     return (pipeline, mount_path)
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     # create the camera streams
     video_devices = find_video_devices()
     for video_device, device_info in video_devices:
@@ -291,12 +245,11 @@ def main():
         elif device_info['serial'] in settings['video_devices'].keys():
             serial = device_info['serial']
             config_options = settings['video_devices'][serial]
-            if config_options['type'] == 'CAMLINK':
-                pipeline, mount_path = setup_camlink_device(serial, video_device)
-            else:
-                pipeline, mount_path = setup_uvc_device(serial, video_device)
+            pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
         elif 'Cam Link' in device_info['description']:
-            pipeline, mount_path = setup_camlink_device('CAMLINK', video_device)
+            serial = 'CAMLINK'
+            config_options = settings['video_devices'][serial]
+            pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
         if pipeline:
             factory = GstRtspServer.RTSPMediaFactory()
             factory.set_launch(pipeline)

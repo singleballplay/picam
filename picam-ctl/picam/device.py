@@ -15,26 +15,6 @@ from flask import (
 from flask.views import MethodView
 
 
-V4L2_DEFAULTS = {
-    'focus_auto': 0,
-    'focus_absolute': 0,
-    'exposure_auto_priority': 0,
-    'exposure_auto': 1,
-    'exposure_absolute': 200,
-    'brightness': 128,
-    'contrast': 128,
-    'saturation': 128,
-    'sharpness': 128,
-    'gain': 32,
-    'backlight_compensation': 0,
-    'white_balance_temperature_auto': 0,
-    'white_balance_temperature': 4400,
-    'pan_absolute': 0,
-    'tilt_absolute': 0,
-    'zoom_absolute': 100
-}
-
-
 def render_json(json_data):
     resp = app.make_response(json.dumps(json_data))
     resp.headers['Content-type'] = 'application/json'
@@ -373,19 +353,23 @@ class VideoDeviceApiHandler(MethodView):
 
 class VideoDeviceHandler(MethodView):
     def get(self, serial):
-        v4l2_settings = V4L2_DEFAULTS.copy()
+        v4l2_settings = {}
         description = ''
         if request.method == 'GET':
             device_config = None
             video_configs = app.picam_config.video_devices
-            v4l2_options = []
+            v4l2_options = {}
             video_options = None
             for video_device, device_info in find_video_devices().items():
                 if serial == device_info['serial']:
                     description = device_info['description']
                     device_config = video_configs.get(serial, {})
-                    v4l2_options = device_info['v4l2_options']
-                    v4l2_settings = {setting: value['default'] for setting, value in v4l2_options.items() if value.get('default', None) is not None}
+                    v4l2_options = device_info.get('v4l2_options', {})
+                    v4l2_settings = {
+                        setting: value['default']
+                        for setting, value in v4l2_options.items()
+                        if value.get('default', None) is not None
+                    }
                     v4l2_settings.update(device_config.get('v4l2', {}))
                     video_options = device_info.get('video_options', None)
                     break
@@ -414,6 +398,7 @@ class VideoDeviceHandler(MethodView):
                     'framerate': framerate,
                     'encoding': encoding,
                 })
+                v4l2_settings.update({k: v['default'] for k, v in v4l2_options.items()})
             else:
                 if encoding == 'h264':
                     resolutions = video_options['H264'].keys()
@@ -449,7 +434,7 @@ class VideoDeviceHandler(MethodView):
             if device_info['serial'] == serial:
                 v4l2_options = device_info['v4l2_options']
                 break
-        v4l2_settings = V4L2_DEFAULTS.copy()
+        v4l2_settings = {}
         # prune out the settings that aren't available
         keys = list(v4l2_settings.keys())
         for k in keys:
