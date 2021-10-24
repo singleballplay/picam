@@ -388,7 +388,7 @@ class VideoDeviceHandler(MethodView):
                     resolutions = list(video_options['YUYV'].keys())
                     if resolution not in resolutions:
                         resolution = resolutions[0]
-                        device_config.update({'resolution']: resolutions[0]})
+                        device_config.update({'resolution': resolutions[0]})
                     framerates = video_options['YUYV'][resolution]
                     if str(framerate) not in [str(f) for f in framerates]:
                         framerate = framerates[0]
