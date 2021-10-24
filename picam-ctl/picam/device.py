@@ -52,7 +52,11 @@ def find_resolutions(device):
                 options[current_format].update({resolution: []})
                 current_resolution = resolution
             if 'Interval' in line and current_resolution is not None:
-                framerate = int(float(line.split(' ')[-2][1:]))
+                framerate_str = line.split(' ')[-2][1:]
+                if framerate_str == '59.940':
+                    framerate = framerate_str
+                else:
+                    framerate = int(float(framerate_str))
                 options[current_format][current_resolution].append(framerate)
     return options
 
@@ -407,8 +411,14 @@ class VideoDeviceHandler(MethodView):
                     resolutions = video_options['MJPG'].keys()
                     framerates = video_options['MJPG'][resolution]
                 else:
-                    resolutions = video_options['YUYV'].keys()
+                    resolutions = list(video_options['YUYV'].keys())
+                    if resolution not in resolutions:
+                        resolution = resolutions[0]
+                        device_config['resolution'] = resolutions[0]
                     framerates = video_options['YUYV'][resolution]
+                    if str(framerate) not in [str(f) for f in framerates]:
+                        framerate = framerates[0]
+                        device_config.update({'framerate': framerate})
             model = {
                 'serial': serial,
                 'video_device': serial,
@@ -418,7 +428,7 @@ class VideoDeviceHandler(MethodView):
                 'v4l2': v4l2_settings,
                 'video_options': video_options,
                 'resolutions': resolutions,
-                'framerates': framerates,
+                'framerates': [str(f) for f in framerates],
                 'message': '',
                 'menu': 'devices',
             }
@@ -450,7 +460,9 @@ class VideoDeviceHandler(MethodView):
         app.picam_config.video_devices[serial]['endpoint'] = endpoint_url
         framerate = request.form.get('{}-framerate'.format(serial))
         if framerate:
-            app.picam_config.video_devices[serial]['framerate'] = int(framerate)
+            if framerate != '59.940':
+                framerate = int(framerate)
+            app.picam_config.video_devices[serial]['framerate'] = framerate
         for config_option in ['resolution', 'type', 'encoding']:
             app.picam_config.video_devices[serial][config_option] = request.form.get('{}-{}'.format(serial, config_option))
         for v4l2_ctl in v4l2_options.keys():

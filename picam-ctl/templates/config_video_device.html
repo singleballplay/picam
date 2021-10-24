@@ -34,10 +34,11 @@
                 <div class="video-control">
                     <label for="{{ video_device }}-framerate">Framerate</label>
                     <select name="{{ video_device }}-framerate" id="device-{{ video_device }}-framerate">
-                        <option value="60" {{ 'selected' if device_config['framerate'] == 60 else '' }} {{ 'hidden' if 60 not in framerates }}>60</option>
-                        <option value="30" {{ 'selected' if device_config['framerate'] == 30 else '' }} {{ 'hidden' if 30 not in framerates }}>30</option>
-                        <option value="48" {{ 'selected' if device_config['framerate'] == 48 else '' }} {{ 'hidden' if 48 not in framerates }}>48</option>
-                        <option value="24" {{ 'selected' if device_config['framerate'] == 24 else '' }} {{ 'hidden' if 24 not in framerates }}>24</option>
+                        <option value="60" {{ 'selected' if device_config['framerate'] == 60 else '' }} {{ 'hidden' if '60' not in framerates }}>60</option>
+                        <option value="59.940" {{ 'selected' if device_config['framerate'] == '59.940' else '' }} {{ 'hidden' if '59.940' not in framerates }}>59.940</option>
+                        <option value="30" {{ 'selected' if device_config['framerate'] == 30 else '' }} {{ 'hidden' if '30' not in framerates }}>30</option>
+                        <option value="48" {{ 'selected' if device_config['framerate'] == 48 else '' }} {{ 'hidden' if '48' not in framerates }}>48</option>
+                        <option value="24" {{ 'selected' if device_config['framerate'] == 24 else '' }} {{ 'hidden' if '24' not in framerates }}>24</option>
                     </select>
                 </div>
                 <div class="video-control">
@@ -357,17 +358,19 @@ encoding_options = {
     {% endif %}
     {% if  'YUYV' in video_options.keys() %}
     'software': {
-        {% if '1920x1080' in video_options['YUYV'] and video_options['YUYV']['1920x1080'] | intersect([60,48,30,24]) %}
+        {% if '1920x1080' in video_options['YUYV'] and video_options['YUYV']['1920x1080'] | intersect([60,'59.940',48,30,24]) %}
         '1920x1080': [
             {% if 60 in video_options['YUYV']['1920x1080'] %}60,{% endif %}
+            {% if '59.940' in video_options['YUYV']['1920x1080'] %}'59.940',{% endif %}
             {% if 48 in video_options['YUYV']['1920x1080'] %}48,{% endif %}
             {% if 30 in video_options['YUYV']['1920x1080'] %}30,{% endif %}
             {% if 24 in video_options['YUYV']['1920x1080'] %}24,{% endif %}
         ],
         {% endif %}
-        {% if '1280x720' in video_options['YUYV'] and video_options['YUYV']['1280x720'] | intersect([60,48,30,24]) %}
+        {% if '1280x720' in video_options['YUYV'] and video_options['YUYV']['1280x720'] | intersect([60,'59.940',48,30,24]) %}
         '1280x720': [
             {% if 60 in video_options['YUYV']['1280x720'] %}60,{% endif %}
+            {% if '59.940' in video_options['YUYV']['1280x720'] %}'59.940',{% endif %}
             {% if 48 in video_options['YUYV']['1280x720'] %}48,{% endif %}
             {% if 30 in video_options['YUYV']['1280x720'] %}30,{% endif %}
             {% if 24 in video_options['YUYV']['1280x720'] %}24,{% endif %}

@@ -200,19 +200,29 @@ def setup_uvc_device(serial, video_device, config_options):
             "! rtpjpegpay name=pay0 pt=26 "
         ).format(width, height, framerate)
     elif config_options['encoding'] == 'jpegenc':
+        if framerate not in (60, 48, 30, 24):
+            # 59.940
+            framerate = '7013/117'
+        else:
+            framerate = f'{framerate}/1'
+        # add option to pre downscale for encoded videos
+        #"! videoscale ! video/x-raw,width=1024,height=576 "
         video_format = (
-            # wonky decimal framerate sometimes if not plan 60
-            #"video/x-raw,width={},height={},framerate=7013/117 "
-            "video/x-raw,width={},height={} "
+            "video/x-raw,width={},height={},framerate={} "
             "! jpegenc "
             "! rtpjpegpay name=pay0 pt=96"
-        ).format(width, height)
+        ).format(width, height, framerate)
     elif config_options['encoding'] == 'x264enc':
         # scale video down to get enough performance out of the software encoder
         # slight quality hit at the expense of latency
         keyframe_interval = 2 * framerate
+        if framerate not in (60, 48, 30, 24):
+            # 59.940
+            framerate = '7013/117'
+        else:
+            framerate = f'{framerate}/1'
         video_format = (
-            "video/x-raw,width={},height={},framerate={}/1 "
+            "video/x-raw,width={},height={},framerate={} "
             "! videoscale ! video/x-raw,width=1024,height=576 "
             "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={} "
             "! video/x-h264,profile=high "
@@ -221,8 +231,13 @@ def setup_uvc_device(serial, video_device, config_options):
         ).format(width, height, framerate, keyframe_interval)
     elif config_options['encoding'] == 'vp8enc':
         keyframe_interval = 2 * framerate
+        if framerate not in (60, 48, 30, 24):
+            # 59.940
+            framerate = '7013/117'
+        else:
+            framerate = f'{framerate}/1'
         video_format = (
-            "video/x-raw,width={},height={},framerate={}/1 "
+            "video/x-raw,width={},height={},framerate={} "
             "! jpegdec "
             "! videoscale ! video/x-raw,width=1024,height=576 "
             "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={} target-bitrate=4000000 "
