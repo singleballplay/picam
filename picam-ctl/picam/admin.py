@@ -1,3 +1,4 @@
+import os
 import logging
 import subprocess
 import yaml
@@ -46,6 +47,36 @@ def render_yaml(yaml_data):
     return resp
 
 
+def check_for_new_version():
+    cmd = subprocess.run(
+        'git fetch origin'.split(' '),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL
+    )
+    script_dir = os.path.dirname(__file__)
+    cmd = subprocess.run(
+        f'git diff master origin/master {script_dir}/../../version.txt'.split(' '),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL
+    )
+    r = re.search('\+(\d\.\d\.\d)', cmd.stdout.decode())
+    if r:
+        app.logger.info(r.group(1))
+    else:
+        app.logger.info('no matching group')
+    return r.group(1) if r else ''
+
+
+def get_version():
+    script_dir = os.path.dirname(__file__)
+    cmd = subprocess.run(
+        f'cat {script_dir}/../../version.txt'.split(' '),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL
+    )
+    return cmd.stdout.decode().strip()
+
+
 def get_wifi_power():
     if is_raspberry_pi():
         cmd1 = subprocess.run(
@@ -77,6 +108,8 @@ def get_cpu_governor():
 class AdminHandler(MethodView):
     def get(self):
         model = {
+            'new_version_available': check_for_new_version(),
+            'version': get_version(),
             'wifi_power': get_wifi_power(),
             'scaling_governor': get_cpu_governor(),
             'menu': 'admin',

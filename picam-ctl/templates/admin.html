@@ -38,6 +38,9 @@
         <form name="update-form" method="POST" action="/update-picam">
             <div>
                 <input type="submit" name="update-picam" value="Update Picam"/>
+                {% if new_version_available %}
+                <span>New version available: {{ new_version_available }}</span>
+                {% endif %}
             </div>
         </form>
         <form name="restart-form" method="POST" action="/restart-picam">
@@ -92,4 +95,7 @@
         </form>
     </fieldset>
 </div>
+{% endblock %}
+{% block footer %}
+Version: {{ version }}
 {% endblock %}

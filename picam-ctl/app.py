@@ -145,4 +145,4 @@ if __name__ == '__main__':
 
         if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
             subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    app.run(host='0.0.0.0', threaded=True)
+    app.run(host='0.0.0.0', threaded=True, debug=os.getenv('PICAM_DEBUG', False))
