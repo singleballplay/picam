@@ -211,6 +211,7 @@ def setup_uvc_device(serial, video_device, config_options):
         video_format = (
             "video/x-raw,width={width},height={height},framerate={framerate} "
             "! videoscale ! video/x-raw,width=1024,height=576 "
+            "! queue max-size-buffers=4 leaky=downstream "
             "! jpegenc "
             "! rtpjpegpay name=pay0 pt=96"
         ).format(
@@ -229,7 +230,9 @@ def setup_uvc_device(serial, video_device, config_options):
             framerate = f'{framerate}/1'
         video_format = (
             "video/x-raw,width={width},height={height},framerate={framerate} "
+            "! videoscale ! video/x-raw,width=1024,height=576 "
             "! videoconvert ! video/x-raw,format=I420 "
+            "! queue max-size-buffers=4 leaky=downstream "
             "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={keyframe_interval} "
             "! video/x-h264,profile=high "
             "! h264parse config-interval=2 "
@@ -249,7 +252,9 @@ def setup_uvc_device(serial, video_device, config_options):
             framerate = f'{framerate}/1'
         video_format = (
             "video/x-raw,width={width},height={height},framerate={framerate} "
+            "! videoscale ! video/x-raw,width=1024,height=576 "
             "! videoconvert ! video/x-raw,width={width},height={height},framerate={framerate},format=I420 "
+            "! queue max-size-buffers=4 leaky=downstream "
             "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={keyframe_interval} target-bitrate=4000000 "
             "! rtpvp8pay name=pay0 pt=96 "
         ).format(

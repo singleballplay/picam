@@ -384,7 +384,27 @@ class VideoDeviceHandler(MethodView):
             framerate = device_config.get('framerate', 30)
             encoding = device_config.get('encoding', 'jpegenc')
             if not device_config:
-                if 'YUYV' in encodings:
+                if 'H264' in encodings:
+                    encoding = 'h264'
+                    resolutions = video_options['H264'].keys()
+                    if resolution not in resolutions:
+                        resolution = resolutions[0]
+                        device_config.update({'resolution': resolutions[0]})
+                    framerates = video_options['H264'][resolution]
+                    if str(framerate) not in [str(f) for f in framerates]:
+                        framerate = framerates[0]
+                        device_config.update({'framerate': framerate})
+                elif 'MJPG' in encodings:
+                    encoding = 'mjpeg'
+                    resolutions = video_options['MJPG'].keys()
+                    if resolution not in resolutions:
+                        resolution = resolutions[0]
+                        device_config.update({'resolution': resolutions[0]})
+                    framerates = video_options['MJPG'][resolution]
+                    if str(framerate) not in [str(f) for f in framerates]:
+                        framerate = framerates[0]
+                        device_config.update({'framerate': framerate})
+                elif 'YUYV' in encodings:
                     resolutions = list(video_options['YUYV'].keys())
                     if resolution not in resolutions:
                         resolution = resolutions[0]
@@ -393,14 +413,6 @@ class VideoDeviceHandler(MethodView):
                     if str(framerate) not in [str(f) for f in framerates]:
                         framerate = framerates[0]
                         device_config.update({'framerate': framerate})
-                if 'H264' in encodings:
-                    encoding = 'h264'
-                    resolutions = video_options['H264'].keys()
-                    framerates = video_options['H264'][resolution]
-                elif 'MJPG' in encodings:
-                    encoding = 'mjpeg'
-                    resolutions = video_options['MJPG'].keys()
-                    framerates = video_options['MJPG'][resolution]
                 if str(60) in [str(f) for f in framerates]:
                     framerate = 60
                 device_config.update({
@@ -481,6 +493,9 @@ class VideoDeviceHandler(MethodView):
                     else:
                         ctl_val = 1
                 v4l2_settings[v4l2_ctl] = int(ctl_val)
+            else:
+                if v4l2_ctl in ('exposure_auto', 'focus_auto', 'white_balance_temperature_auto'):
+                    v4l2_settings[v4l2_ctl] = 0
         app.picam_config.video_devices[serial]['v4l2'].update(v4l2_settings)
         return redirect('/devices')
 
