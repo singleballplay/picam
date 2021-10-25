@@ -401,7 +401,7 @@ class VideoDeviceHandler(MethodView):
                     encoding = 'mjpeg'
                     resolutions = video_options['MJPG'].keys()
                     framerates = video_options['MJPG'][resolution]
-                if 60 in framerates:
+                if str(60) in [str(f) for f in framerates]:
                     framerate = 60
                 device_config.update({
                     'resolution': resolution,

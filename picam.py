@@ -18,6 +18,7 @@ mainloop = GObject.MainLoop()
 server = GstRtspServer.RTSPServer()
 mounts = server.get_mount_points()
 
+logging.basicConfig(level=logging.INFO)
 
 settings = None
 script_dir = os.path.dirname(__file__)
@@ -25,7 +26,7 @@ with open(f'{script_dir}/picam.yaml', 'r') as settings_file:
     try:
         settings = yaml.safe_load(settings_file)
     except:
-        print('failed to parse settings file')
+        logging.info('failed to parse settings file')
 
 
 def adjust_video_settings(device, settings):
@@ -188,7 +189,7 @@ def setup_uvc_device(serial, video_device, config_options):
     launch = 'v4l2src device={}'.format(video_device)
     if config_options['encoding'] == 'h264':
         # better control over the iframe period, default is way too many seconds
-        launch = 'uvch264src device={} initial-bitrate=5000000 average-bitrate=5000000 auto-start=true iframe-period=1000 name=src0 src0.vidsrc'.format(video_device)
+        launch = 'uvch264src device={} initial-bitrate=5000000 average-bitrate=5000000 auto-start=true iframe-period=2000 name=src0 src0.vidsrc'.format(video_device)
     video_format = (
         "video/x-h264,width={},height={},framerate={}/1,profile=main "
         "! h264parse config-interval=1 "
@@ -200,18 +201,23 @@ def setup_uvc_device(serial, video_device, config_options):
             "! rtpjpegpay name=pay0 pt=26 "
         ).format(width, height, framerate)
     elif config_options['encoding'] == 'jpegenc':
+        # scale video down to get enough performance out of the software encoder
+        # slight quality hit at the expense of latency
         if framerate not in (60, 48, 30, 24):
             # 59.940
             framerate = '7013/117'
         else:
             framerate = f'{framerate}/1'
-        # add option to pre downscale for encoded videos
-        #"! videoscale ! video/x-raw,width=1024,height=576 "
         video_format = (
-            "video/x-raw,width={},height={},framerate={} "
+            "video/x-raw,width={width},height={height},framerate={framerate} "
+            "! videoscale ! video/x-raw,width=1024,height=576 "
             "! jpegenc "
             "! rtpjpegpay name=pay0 pt=96"
-        ).format(width, height, framerate)
+        ).format(
+            width=width,
+            height=height,
+            framerate=framerate,
+        )
     elif config_options['encoding'] == 'x264enc':
         # scale video down to get enough performance out of the software encoder
         # slight quality hit at the expense of latency
@@ -222,13 +228,18 @@ def setup_uvc_device(serial, video_device, config_options):
         else:
             framerate = f'{framerate}/1'
         video_format = (
-            "video/x-raw,width={},height={},framerate={} "
-            "! videoscale ! video/x-raw,width=1024,height=576 "
-            "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={} "
+            "video/x-raw,width={width},height={height},framerate={framerate} "
+            "! videoconvert ! video/x-raw,format=I420 "
+            "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={keyframe_interval} "
             "! video/x-h264,profile=high "
             "! h264parse config-interval=2 "
             "! rtph264pay name=pay0 pt=96 "
-        ).format(width, height, framerate, keyframe_interval)
+        ).format(
+            width=width,
+            height=height,
+            framerate=framerate,
+            keyframe_interval=keyframe_interval,
+        )
     elif config_options['encoding'] == 'vp8enc':
         keyframe_interval = 2 * framerate
         if framerate not in (60, 48, 30, 24):
@@ -237,19 +248,22 @@ def setup_uvc_device(serial, video_device, config_options):
         else:
             framerate = f'{framerate}/1'
         video_format = (
-            "video/x-raw,width={},height={},framerate={} "
-            "! jpegdec "
-            "! videoscale ! video/x-raw,width=1024,height=576 "
-            "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={} target-bitrate=4000000 "
+            "video/x-raw,width={width},height={height},framerate={framerate} "
+            "! videoconvert ! video/x-raw,width={width},height={height},framerate={framerate},format=I420 "
+            "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={keyframe_interval} target-bitrate=4000000 "
             "! rtpvp8pay name=pay0 pt=96 "
-        ).format(width, height, framerate, keyframe_interval)
+        ).format(
+            width=width,
+            height=height,
+            framerate=framerate,
+            keyframe_interval=keyframe_interval,
+        )
     pipeline = '( {} ! {} )'.format(launch, video_format)
     mount_path = config_options['endpoint']
     return (pipeline, mount_path)
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
     # create the camera streams
     video_devices = find_video_devices()
     for video_device, device_info in video_devices:
@@ -266,6 +280,7 @@ def main():
             config_options = settings['video_devices'][serial]
             pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
         if pipeline:
+            logging.info(pipeline)
             factory = GstRtspServer.RTSPMediaFactory()
             factory.set_launch(pipeline)
             factory.set_shared(True)
