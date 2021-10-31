@@ -210,14 +210,33 @@ def setup_uvc_device(serial, video_device, config_options):
             framerate = f'{framerate}/1'
         video_format = (
             "video/x-raw,width={width},height={height},framerate={framerate} "
-            "! videoscale ! video/x-raw,width=1024,height=576 "
-            "! queue max-size-buffers=4 leaky=downstream "
+            "! videoscale ! video/x-raw,width=1280,height=720 "
+            "! queue max-size-buffers=2 leaky=downstream "
             "! jpegenc "
             "! rtpjpegpay name=pay0 pt=96"
         ).format(
             width=width,
             height=height,
             framerate=framerate,
+        )
+    elif config_options['encoding'] == 'v4l2h264enc':
+        keyframe_interval = 2 * framerate
+        if framerate not in (60, 48, 30, 24):
+            # 59.940
+            framerate = '7013/117'
+        else:
+            framerate = f'{framerate}/1'
+        video_format = (
+            "video/x-raw,width={width},height={height},framerate={framerate} "
+            "! videoscale ! video/x-raw,width=1280,height=720 "
+            "! v4l2h264enc extra-controls=encode,h264_level=13,h264_profile=4,video_bitrate=10000000 "
+            "! h264parse config-interval=2 "
+            "! rtph264pay name=pay0 pt=96 "
+        ).format(
+            width=width,
+            height=height,
+            framerate=framerate,
+            keyframe_interval=keyframe_interval,
         )
     elif config_options['encoding'] == 'x264enc':
         # scale video down to get enough performance out of the software encoder
@@ -254,7 +273,6 @@ def setup_uvc_device(serial, video_device, config_options):
             "video/x-raw,width={width},height={height},framerate={framerate} "
             "! videoscale ! video/x-raw,width=1024,height=576 "
             "! videoconvert ! video/x-raw,width={width},height={height},framerate={framerate},format=I420 "
-            "! queue max-size-buffers=4 leaky=downstream "
             "! vp8enc end-usage=cbr deadline=1 threads=8 keyframe-max-dist={keyframe_interval} target-bitrate=4000000 "
             "! rtpvp8pay name=pay0 pt=96 "
         ).format(

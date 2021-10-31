@@ -44,16 +44,29 @@
                 <div class="video-control">
                     <label for="{{ video_device }}-encoding">Encoding</label>
                     <select name="{{ video_device }}-encoding" id="device-{{ video_device }}-encoding">
+                        {% if  'H264' in video_options.keys() or 'MJPG' in video_options.keys() %}
+			<optgroup label="builtin">
+                        {% endif %}
                         {% if  'H264' in video_options.keys() %}
-                        <option value="h264" {{ 'selected' if device_config['encoding'] == 'h264' else '' }}>h264</option>
+                        <option value="h264" {{ 'selected' if device_config['encoding'] == 'h264' else '' }}>h264 (device)</option>
                         {% endif %}
                         {% if  'MJPG' in video_options.keys() %}
-                        <option value="mjpeg" {{ 'selected' if device_config['encoding'] == 'mjpeg' else '' }}>mjpeg</option>
+                        <option value="mjpeg" {{ 'selected' if device_config['encoding'] == 'mjpeg' else '' }}>mjpeg (device)</option>
+                        {% endif %}
+                        {% if  'H264' in video_options.keys() or 'MJPG' in video_options.keys() %}
+			</optgroup>
                         {% endif %}
                         <!-- software encoders, always allow -->
+			{% if v4l2h264enc_available %}
+			<optgroup label="hardware">
+                        <option value="v4l2h264enc" {{ 'selected' if device_config['encoding'] == 'v4l2h264enc' else '' }}>v4l2h264enc</option>
+			</optgroup>
+			{% endif %}
+			<optgroup label="software">
                         <option value="jpegenc" {{ 'selected' if device_config['encoding'] == 'jpegenc' else '' }}>jpegenc</option>
                         <option value="x264enc" {{ 'selected' if device_config['encoding'] == 'x264enc' else '' }}>x264enc</option>
                         <option value="vp8enc" {{ 'selected' if device_config['encoding'] == 'vp8enc' else '' }}>vp8enc</option>
+			</optgroup>
                     </select>
                 </div>
             </fieldset>
@@ -432,7 +445,7 @@ function updateEncodingOptions(event) {
     let encodings_elem = event.target;
     let encoding = event.target.value;
     let device_id = event.target.id.slice(0, -('-encoding'.length));
-    if (['x264enc', 'jpegenc', 'vp8enc'].includes(encoding)) {
+    if (['v4l2h264enc', 'x264enc', 'jpegenc', 'vp8enc'].includes(encoding)) {
         encoding = 'software';
     }
 
@@ -456,7 +469,11 @@ function updateEncodingOptions(event) {
     let framerates_elem = document.querySelector(`#${device_id}-framerate`);
     let option_selected = false;
     for (let framerate_option of framerates_elem.children) {
-        if (encoding_options[encoding][resolution].includes(parseInt(framerate_option.value))) {
+	let framerate_option_val = framerate_option.value;
+	if (framerate_option_val != '59.940') {
+	    framerate_option_val = parseInt(framerate_option_val);
+	}
+        if (encoding_options[encoding][resolution].includes(framerate_option_val)) {
             framerate_option.removeAttribute('hidden');
             framerate_option.removeAttribute('selected');
             if (option_selected == false) {
@@ -477,7 +494,7 @@ function updateResolutionOptions(event) {
 
     let encoding_elem = document.querySelector(`#${device_id}-encoding`);
     let encoding = encoding_elem.value;
-    if (['x264enc', 'jpegenc', 'vp8enc'].includes(encoding)) {
+    if (['v4l2h264enc', 'x264enc', 'jpegenc', 'vp8enc'].includes(encoding)) {
         encoding = 'software';
     }
 

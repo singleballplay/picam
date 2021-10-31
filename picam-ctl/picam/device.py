@@ -278,6 +278,13 @@ def get_v4l2_settings(device):
     return v4l2_settings
 
 
+def v4l2h264enc_available():
+    cmd = subprocess.run(
+        'gst-inspect-1.0 v4l2h264enc'.split(' '),
+        stdout=subprocess.PIPE
+    )
+    return cmd.returncode == 0
+
 def find_video_devices():
     """
     fetches devices from v4l2 and creates a dict with the device
@@ -449,6 +456,7 @@ class VideoDeviceHandler(MethodView):
                 'framerates': [str(f) for f in framerates],
                 'message': '',
                 'menu': 'devices',
+                'v4l2h264enc_available': v4l2h264enc_available(),
             }
             return render_template('config_video_device.html', **model)
 
