@@ -2,15 +2,15 @@
 
 For convenience, a prebuilt image is available. It is built using the pi-gen project to build a custom Raspbian Buster lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
 
-Download [picam-v3.0.0.zip](https://drive.google.com/file/d/1p9x3uI7XoJgceHyxd0ZsZtsN1lo5g0op/view?usp=sharing)
+Download [picam-v3.1.0.zip](https://drive.google.com/file/d/1-6sgPOa4B8h7kWaiVp0D7WkhSNjVc5mn/view?usp=sharing)
 
-SHA-256: 398bf30c302d054f422a6e74eed55a2bbebe7e5c6a7d003fc7577a4457ecb3ce  picam.img
+SHA-256: 8cfe4a54b6004ad3832a63ddb849d24c90077151a314caf19df49c5bfd919094  picam.img
 
 It is a good idea to visit the admin page in the website and run the 'Update Picam' to get the latest changes. The downloaded image will periodically be updated but not as frequently as the code. Restart after updating. Future versions will check for updates but that feature is not currently implemented.
 
 IMPORTANT!
 
-If you have previously downloaded the Raspbian Stretch image, from about a year ago, you will need to download this new image and config the picam again. I'll be working on a more seemless way to upgrade in the future. This version should support the Raspberry Pi 4 now.
+If you have previously downloaded the Raspbian Stretch image, from about 2020, you will need to download this new image and config the picam again. I'll be working on a more seemless way to upgrade in the future. This version should support the Raspberry Pi 4 now.
 
 
 # OBS Sources
