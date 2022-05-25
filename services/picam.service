@@ -1,12 +1,8 @@
 [Unit]
 Description=RTSP Webcam
 Wants=network-online.target
-After=multi-user.target network-online.target systemd-user-sessions.service
+After=network-online.target systemd-user-sessions.service
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 /home/pi/picam/picam.py
-Restart=on-abort
-
-[Install]
-WantedBy=multi-user.target
