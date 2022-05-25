@@ -37,6 +37,7 @@ def adjust_video_settings(device, settings):
         device: the v4l2 device e.g. /dev/video0
         settings: the controls to change
     """
+    logging.info('adjusting %s for %s', device, settings)
     result = subprocess.run([
         'v4l2-ctl',
         '-d', device,
@@ -176,8 +177,11 @@ def setup_uvc_device(serial, video_device, config_options):
         if ctl.endswith('_auto'):
             adjust_video_settings(video_device, '{}={}'.format(ctl, val))
     for ctl, val in config_options.get('v4l2', {}).items():
+        if ctl.endswith('_auto'):
+            # we already handled these first
+            continue
         if ctl in ('exposure_absolute', 'focus_absolute', 'white_balance_temperature'):
-            if ctl == 'exposure_absolute' and config_options['v4l2'].get('exposure_auto', 0):
+            if ctl == 'exposure_absolute' and config_options['v4l2'].get('exposure_auto', 3) != 1:
                 continue
             elif ctl == 'focus_absolute' and config_options['v4l2'].get('focus_auto', 0):
                 continue

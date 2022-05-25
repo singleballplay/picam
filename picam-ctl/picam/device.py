@@ -502,8 +502,12 @@ class VideoDeviceHandler(MethodView):
                         ctl_val = 1
                 v4l2_settings[v4l2_ctl] = int(ctl_val)
             else:
-                if v4l2_ctl in ('exposure_auto', 'focus_auto', 'white_balance_temperature_auto'):
+                # handle missing values as 'off' or 'manual'
+                if v4l2_ctl in ('focus_auto', 'white_balance_temperature_auto', 'backlight_compensation', 'exposure_auto_priority'):
                     v4l2_settings[v4l2_ctl] = 0
+                if v4l2_ctl == 'exposure_auto':
+                    # manual mode
+                    v4l2_settings[v4l2_ctl] = 1
         app.picam_config.video_devices[serial]['v4l2'].update(v4l2_settings)
         return redirect('/devices')
 
