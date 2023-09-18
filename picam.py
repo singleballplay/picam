@@ -173,27 +173,29 @@ def setup_uvc_device(serial, video_device, config_options):
     logging.info(f'setting up video device {video_device}')
     # run through all of the options and set the "auto" flags first
     # errors can happen if setting "absolute" values if corresponding "auto" isn't set properly
-    for ctl, val in config_options.get('v4l2', {}).items():
-        if ctl.endswith('_auto'):
+    if serial not in ['KIYOPRO', 'KIYOPROULTRA']:
+        for ctl, val in config_options.get('v4l2', {}).items():
+            if ctl.endswith('_auto'):
+                adjust_video_settings(video_device, '{}={}'.format(ctl, val))
+        for ctl, val in config_options.get('v4l2', {}).items():
+            if ctl.endswith('_auto'):
+                # we already handled these first
+                continue
+            if ctl in ('exposure_absolute', 'focus_absolute', 'white_balance_temperature'):
+                if ctl == 'exposure_absolute' and config_options['v4l2'].get('exposure_auto', 3) != 1:
+                    continue
+                elif ctl == 'focus_absolute' and config_options['v4l2'].get('focus_auto', 0):
+                    continue
+                elif ctl == 'white_balance_temperature' and config_options['v4l2'].get('white_balance_temperature_auto', 0):
+                    continue
             adjust_video_settings(video_device, '{}={}'.format(ctl, val))
-    for ctl, val in config_options.get('v4l2', {}).items():
-        if ctl.endswith('_auto'):
-            # we already handled these first
-            continue
-        if ctl in ('exposure_absolute', 'focus_absolute', 'white_balance_temperature'):
-            if ctl == 'exposure_absolute' and config_options['v4l2'].get('exposure_auto', 3) != 1:
-                continue
-            elif ctl == 'focus_absolute' and config_options['v4l2'].get('focus_auto', 0):
-                continue
-            elif ctl == 'white_balance_temperature' and config_options['v4l2'].get('white_balance_temperature_auto', 0):
-                continue
-        adjust_video_settings(video_device, '{}={}'.format(ctl, val))
     framerate = config_options.get('framerate', '30')
     width, height = config_options.get('resolution', '1280x720').split('x')
-    launch = 'v4l2src device={}'.format(video_device)
+    launch = 'v4l2src device={} do-timestamp=true'.format(video_device)
     if config_options['encoding'] == 'h264':
-        # better control over the iframe period, default is way too many seconds
-        launch = 'uvch264src device={} initial-bitrate=5000000 average-bitrate=5000000 auto-start=true iframe-period=2000 name=src0 src0.vidsrc'.format(video_device)
+        if serial not in ['KIYOPRO', 'KIYOPROULTRA']:
+            # better control over the iframe period, default is way too many seconds
+            launch = 'uvch264src device={} initial-bitrate=5000000 average-bitrate=5000000 auto-start=true iframe-period=2000 name=src0 fixed-framerate=true src0.vidsrc'.format(video_device)
     video_format = (
         "video/x-h264,width={},height={},framerate={}/1,profile=main "
         "! h264parse config-interval=1 "
@@ -202,6 +204,7 @@ def setup_uvc_device(serial, video_device, config_options):
     if config_options['encoding'] == 'mjpeg':
         video_format = (
             "image/jpeg,width={},height={},framerate={}/1 "
+            "! jpegparse "
             "! rtpjpegpay name=pay0 pt=26 "
         ).format(width, height, framerate)
     elif config_options['encoding'] == 'jpegenc':
@@ -233,6 +236,7 @@ def setup_uvc_device(serial, video_device, config_options):
         video_format = (
             "video/x-raw,width={width},height={height},framerate={framerate} "
             "! videoscale ! video/x-raw,width=1280,height=720 "
+            "! videoconvert ! video/x-raw,format=I420 "
             "! v4l2h264enc extra-controls=encode,h264_level=13,h264_profile=4,video_bitrate=10000000 "
             "! h264parse config-interval=2 "
             "! rtph264pay name=pay0 pt=96 "
@@ -298,12 +302,20 @@ def main():
         mount_path = None
         if 'bcm2835-v4l2' in device_info['description']:
             pipeline, mount_path = setup_pi_camera_device(video_device)
-        elif device_info['serial'] in settings['video_devices'].keys():
-            serial = device_info['serial']
-            config_options = settings['video_devices'][serial]
-            pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
         elif 'Cam Link' in device_info['description']:
             serial = 'CAMLINK'
+            config_options = settings['video_devices'][serial]
+            pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
+        elif 'Kiyo Pro Ultra' in device_info['description']:
+            serial = 'KIYOPROULTRA'
+            config_options = settings['video_devices'][serial]
+            pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
+        elif 'Kiyo Pro' in device_info['description']:
+            serial = 'KIYOPRO'
+            config_options = settings['video_devices'][serial]
+            pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
+        elif device_info['serial'] in settings['video_devices'].keys():
+            serial = device_info['serial']
             config_options = settings['video_devices'][serial]
             pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
         if pipeline:

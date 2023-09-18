@@ -303,6 +303,12 @@ def find_video_devices():
         if serial == '' and 'Cam Link' in description:
             # cam link does not report unique serial so set one
             serial = 'CAMLINK'
+        if serial == '' and 'Kiyo Pro Ultra' in description:
+            # cam link does not report unique serial so set one
+            serial = 'KIYOPROULTRA'
+        elif serial == '' and 'Kiyo Pro' in description:
+            # cam link does not report unique serial so set one
+            serial = 'KIYOPRO'
         v4l2_options = get_v4l2_settings(device)
         devices.update({
             device: {
