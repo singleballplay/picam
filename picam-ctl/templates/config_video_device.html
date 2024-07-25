@@ -81,6 +81,13 @@
                 </div>
                 {% endif %}
 
+                {% if 'white_balance_automatic' in v4l2_options %}
+                <div class="video-control">
+                    <label for="{{ video_device }}-white_balance_automatic">White Balance Auto</label>
+                    <input type="checkbox" name="{{ video_device }}-white_balance_automatic" {{ 'checked' if v4l2['white_balance_automatic'] in ['1', 1, 'on', 'checked'] else '' }} id="device-{{ video_device }}-white_balance_automatic"/>
+                </div>
+                {% endif %}
+
                 {% if 'white_balance_temperature_auto' in v4l2_options %}
                 <div class="video-control">
                     <label for="{{ video_device }}-white_balance_temperature_auto">White Balance Auto</label>
@@ -96,6 +103,13 @@
                 </div>
                 {% endif %}
 
+                {% if 'auto_exposure' in v4l2_options %}
+                <div class="video-control">
+                    <label for="{{ video_device }}-auto_exposure">Exposure Automatic</label>
+                    <input type="checkbox" name="{{ video_device }}-auto_exposure" {{ 'checked' if v4l2['auto_exposure'] in ['3', 3] else '' }} id="device-{{ video_device }}-auto_exposure"/>
+                </div>
+                {% endif %}
+
                 {% if 'exposure_auto' in v4l2_options %}
                 <div class="video-control">
                     <label for="{{ video_device }}-exposure_auto">Exposure Auto</label>
@@ -107,6 +121,14 @@
                 <div class="video-control">
                     <label for="{{ video_device }}-exposure_auto_priority">Exposure Auto Priority</label>
                     <input type="checkbox" name="{{ video_device }}-exposure_auto_priority" {{ 'checked' if v4l2['exposure_auto_priority'] in ['1', 1] else '' }} id="device-{{ video_device }}-exposure_auto_priority"/>
+                </div>
+                {% endif %}
+
+                {% if 'exposure_time_absolute' in v4l2_options %}
+                <div class="video-control">
+                    <label for="{{ video_device }}-exposure_time_absolute">Exposure Time</label>
+                    <input type="number" min="{{ v4l2_options['exposure_time_absolute']['min'] }}" max="{{ v4l2_options['exposure_time_absolute']['max'] }}" step="{{ v4l2_options['exposure_time_absolute']['step'] }}" value="{{ v4l2['exposure_time_absolute'] }}" name="{{ video_device }}-exposure_time_absolute" id="device-{{ video_device }}-exposure_time_absolute" onchange="updateValue(this, 'device-{{ video_device }}-exposure_time_absolute-range')" />
+                    <input type="range" min="{{ v4l2_options['exposure_time_absolute']['min'] }}" max="{{ v4l2_options['exposure_time_absolute']['max'] }}" step="{{ v4l2_options['exposure_time_absolute']['step'] }}" value="{{ v4l2['exposure_time_absolute'] }}" name="{{ video_device }}-exposure_time_absolute-range" id="device-{{ video_device }}-exposure_time_absolute-range" oninput="updateValue(this, 'device-{{ video_device }}-exposure_time_absolute')" />
                 </div>
                 {% endif %}
 
@@ -178,6 +200,13 @@
                 <div class="video-control">
                     <label for="{{ video_device }}-backlight_compensation">Backlight Compensation</label>
                     <input type="checkbox" name="{{ video_device }}-backlight_compensation" {{ 'checked' if v4l2['backlight_compensation'] in ['1', 1] }} id="device-{{ video_device }}-backlight_compensation"/>
+                </div>
+                {% endif %}
+
+                {% if 'focus_automatic_continuous' in v4l2_options %}
+                <div class="video-control">
+                    <label for="{{ video_device }}-focus_automatic_continuous">Focus Continous</label>
+                    <input type="checkbox" name="{{ video_device }}-focus_automatic_continuous" {{ 'checked' if v4l2['focus_automatic_continuous'] in ['1', 1] }} id="device-{{ video_device }}-focus_automatic_continuous"/>
                 </div>
                 {% endif %}
 

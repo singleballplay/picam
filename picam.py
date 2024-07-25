@@ -182,16 +182,22 @@ def setup_uvc_device(serial, video_device, config_options):
                 # we already handled these first
                 continue
             if ctl in ('exposure_absolute', 'focus_absolute', 'white_balance_temperature'):
+                if ctl == 'exposure_absolute' and config_options['v4l2'].get('auto_exposure', 3) != 1:
+                    continue
                 if ctl == 'exposure_absolute' and config_options['v4l2'].get('exposure_auto', 3) != 1:
                     continue
                 elif ctl == 'focus_absolute' and config_options['v4l2'].get('focus_auto', 0):
                     continue
+                elif ctl == 'focus_absolute' and config_options['v4l2'].get('focus_automatic_continuous', 0):
+                    continue
                 elif ctl == 'white_balance_temperature' and config_options['v4l2'].get('white_balance_temperature_auto', 0):
+                    continue
+                elif ctl == 'white_balance_temperature' and config_options['v4l2'].get('white_balance_automatic', 0):
                     continue
             adjust_video_settings(video_device, '{}={}'.format(ctl, val))
     framerate = config_options.get('framerate', '30')
     width, height = config_options.get('resolution', '1280x720').split('x')
-    launch = 'v4l2src device={} do-timestamp=true'.format(video_device)
+    launch = 'v4l2src device={} io-mode=4 do-timestamp=0'.format(video_device)
     if config_options['encoding'] == 'h264':
         if serial not in ['KIYOPRO', 'KIYOPROULTRA']:
             # better control over the iframe period, default is way too many seconds
@@ -204,6 +210,7 @@ def setup_uvc_device(serial, video_device, config_options):
     if config_options['encoding'] == 'mjpeg':
         video_format = (
             "image/jpeg,width={},height={},framerate={}/1 "
+            "! queue leaky=downstream "
             "! jpegparse "
             "! rtpjpegpay name=pay0 pt=26 "
         ).format(width, height, framerate)
@@ -300,17 +307,18 @@ def main():
     for video_device, device_info in video_devices:
         pipeline = None
         mount_path = None
+        logging.info(device_info['description'])
         if 'bcm2835-v4l2' in device_info['description']:
             pipeline, mount_path = setup_pi_camera_device(video_device)
         elif 'Cam Link' in device_info['description']:
             serial = 'CAMLINK'
             config_options = settings['video_devices'][serial]
             pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
-        elif 'Kiyo Pro Ultra' in device_info['description']:
+        elif 'Kiyo Pro Ultra' in device_info['description'] and 'KIYOPROULTRA' in settings['video_devices'].keys():
             serial = 'KIYOPROULTRA'
             config_options = settings['video_devices'][serial]
             pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
-        elif 'Kiyo Pro' in device_info['description']:
+        elif 'Kiyo Pro' in device_info['description'] and 'KIYOPRO' in settings['video_devices'].keys():
             serial = 'KIYOPRO'
             config_options = settings['video_devices'][serial]
             pipeline, mount_path = setup_uvc_device(serial, video_device, config_options)
@@ -323,6 +331,7 @@ def main():
             factory = GstRtspServer.RTSPMediaFactory()
             factory.set_launch(pipeline)
             factory.set_shared(True)
+            logging.info(factory.get_protocols())
             mounts.add_factory(mount_path, factory)
 
     # creates the audio streams

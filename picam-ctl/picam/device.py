@@ -156,9 +156,10 @@ def find_serial(device_name):
     cmd1 = subprocess.Popen(('/bin/udevadm', 'info', '--name={}'.format(device_name)), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     cmd2 = subprocess.run(('grep', 'SERIAL_SHORT'), stdin=cmd1.stdout, stdout=subprocess.PIPE)
     if cmd2.returncode == 0:
-        return cmd2.stdout.decode().strip().split('\n')[0].split('=')[1]
+        serial = cmd2.stdout.decode().strip().split('\n')[0].split('=')[1]
     else:
-        return ''
+        serial = ''
+    return serial
 
 
 def find_audio_devices(with_rates=False):
@@ -261,20 +262,22 @@ def get_v4l2_settings(device):
     for line in v4l2_options_raw:
         elems = line.strip().split(' ')
         v4l2_option = elems[0]
-        _min = re.findall('min=(-?\d+)', line)
-        _max = re.findall('max=(-?\d+)', line)
-        _default = re.findall('default=(-?\d+)', line)
-        _step = re.findall('step=(-?\d+)', line)
-        _value = re.findall('value=(-?\d+)', line)
-        v4l2_settings.update({
-            v4l2_option: {
-                'min': _min[0] if _min else None,
-                'max': _max[0] if _max else None,
-                'step': _step[0] if _step else None,
-                'default': _default[0] if _default else None,
-                'value': _value[0] if _value else None,
-            }
-        })
+        # exclude 'User Controls' and 'Camera Controls' lines
+        if v4l2_option and v4l2_option != 'User' and v4l2_option != 'Camera':
+            _min = re.findall('min=(-?\d+)', line)
+            _max = re.findall('max=(-?\d+)', line)
+            _default = re.findall('default=(-?\d+)', line)
+            _step = re.findall('step=(-?\d+)', line)
+            _value = re.findall('value=(-?\d+)', line)
+            v4l2_settings.update({
+                v4l2_option: {
+                    'min': _min[0] if _min else None,
+                    'max': _max[0] if _max else None,
+                    'step': _step[0] if _step else None,
+                    'default': _default[0] if _default else None,
+                    'value': _value[0] if _value else None,
+                }
+            })
     return v4l2_settings
 
 
@@ -502,6 +505,12 @@ class VideoDeviceHandler(MethodView):
             if ctl_val is not None:
                 if ctl_val == 'on':
                     # not quite the best way to handle this generically
+                    if v4l2_ctl == 'auto_exposure':
+                        ctl_val = 3
+                    else:
+                        ctl_val = 1
+
+                    # deprecated property?
                     if v4l2_ctl == 'exposure_auto':
                         ctl_val = 3
                     else:
@@ -509,8 +518,23 @@ class VideoDeviceHandler(MethodView):
                 v4l2_settings[v4l2_ctl] = int(ctl_val)
             else:
                 # handle missing values as 'off' or 'manual'
-                if v4l2_ctl in ('focus_auto', 'white_balance_temperature_auto', 'backlight_compensation', 'exposure_auto_priority'):
+                auto_properties = (
+                    'focus_auto',
+                    'focus_automatic_continuous',
+                    'white_balance_auto',
+                    'white_balance_automatic',
+                    'backlight_compensation',
+                    'exposure_auto_priority',
+                    'exposure_dynamic_framerate',
+                )
+                if v4l2_ctl in auto_properties:
                     v4l2_settings[v4l2_ctl] = 0
+
+                if v4l2_ctl == 'auto_exposure':
+                    # manual mode
+                    v4l2_settings[v4l2_ctl] = 1
+
+                # deprecated property?
                 if v4l2_ctl == 'exposure_auto':
                     # manual mode
                     v4l2_settings[v4l2_ctl] = 1

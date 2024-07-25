@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # setup required packages
+#gstreamer1.0-omx \
 sudo apt update
 sudo apt install -y \
     vim \
@@ -15,7 +16,6 @@ sudo apt install -y \
     gstreamer1.0-tools \
     gstreamer1.0-alsa \
     gstreamer1.0-libav \
-    gstreamer1.0-omx \
     nginx
 
 if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
