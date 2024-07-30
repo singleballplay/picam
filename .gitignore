@@ -1,3 +1,4 @@
 *.pyc
 picam.yaml
 *.code-workspace
+.venv/

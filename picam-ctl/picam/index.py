@@ -1,31 +1,31 @@
 import logging
 import subprocess
-import yaml
 import json
 import re
 
 from flask import (
     current_app as app,
-    request,
-    flash,
-    redirect,
-    Response,
     render_template,
 )
 from flask.views import MethodView
 
-from picam.device import (
-    find_video_devices,
+from picam.audio  import (
     find_audio_devices,
+    get_audio_device_settings,
+    get_current_recording_level,
+)
+from picam.video import (
+    find_video_devices,
     get_device_settings,
 )
 
 
 class IndexHandler(MethodView):
+    """Dashboard for realtime adjustments of configure devices."""
+
     def get(self):
         video_devices = {}
         video_configs = app.picam_config.video_devices
-        audio_configs = app.picam_config.audio_devices
         for video_device, device_info in find_video_devices().items():
             serial = device_info['serial']
             device_settings = get_device_settings(video_device)
@@ -38,10 +38,25 @@ class IndexHandler(MethodView):
                     'v4l2_options': device_info['v4l2_options'],
                 })
                 video_devices.update({serial: device_settings})
+ 
         audio_devices = {}
+        audio_configs = app.picam_config.audio_devices
+        for serial, device_info in find_audio_devices().items():
+            if serial in audio_configs.keys():
+                audio_path = audio_configs[serial]['endpoint']
+                device_settings = {
+                    'path': audio_path,
+                    'alsa_idx': device_info['alsa_idx'],
+                    'description': device_info['description'],
+                    'device_config': audio_configs.get(serial, {}),
+                    'rec_level': device_info['rec_level'],
+                }
+                audio_devices.update({serial: device_settings})
+
         model = {
             'video_devices': video_devices,
             'audio_devices': audio_devices,
             'menu': 'index',
         }
+
         return render_template('index.html', **model)

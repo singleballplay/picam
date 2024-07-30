@@ -10,6 +10,7 @@
     <h2>{{ description }} [{{ serial }}]</h2>
     <form name="update-audio-config" method="POST" action="/config-audio-device/{{ serial }}">
         <input type="hidden" name="{{ audio_device }}-type" id="{{ audio_device }}-type"/>
+	<input type="hidden" name="{{ audio_device }}-alsa_idx" id="{{ audio_device }}-alsa_idx" value="{{ alsa_idx }}"/>
     <div id="{{ audio_device }}" class="audio-settings">
         <div class="audio-control">
             <label for="{{ audio_device }}-endpoint">Endpoint</label>
@@ -28,6 +29,10 @@
                 <option value="32000" {{ 'selected' if device_config['audio_rate'] == 32000 else '' }}>32000</option>
                 {% endif %}
             </select>
+        </div>
+        <div class="audio-control">
+            <label for="{{ audio_device }}-rec_level">Rec Level %</label>
+            <input type="number" min="0" max="100" value="{{ device_config['rec_level'] }}" name="{{ audio_device }}-rec_level" id="{{ audio_device }}-rec_level"/>
         </div>
         <div id="system-controls">
             <div class="audio-control">

@@ -194,6 +194,21 @@
     </div>
 </div>
 {% endfor %}
+
+{% for audio_device, device_settings in audio_devices.items() %}
+<div class="video-device">
+    <h2 onclick="toggleDisplay('audio_{{ audio_device }}')">[<span class="expandable">+</span>] {{ device_settings['path'] }}</h2>
+    <div id="audio_{{ audio_device }}" class="video-settings" style="display: none;">
+        <div class="video-control">
+	    <input type="hidden" name="{{ audio_device }}-alsa_idx" id="{{ audio_device }}-alsa_idx" value="{{ device_settings['alsa_idx'] }}"/>
+            <label for="{{ audio_device }}-rec_level">Rec Level</label>
+	    <input type="number" min="0" max="100" step="5" value="{{ device_settings['rec_level'] }}" name="{{ audio_device }}-rec_level" id="{{ audio_device }}-rec_level" onchange="updateValue(this, '{{ audio_device }}-rec_level-range', 'audio');" />
+	    <input type="range" min="0" max="100" step="5" value="{{ device_settings['rec_leve'] }}" name="{{ audio_device }}-rec_level-range" id="{{ audio_device }}-rec_level-range" oninput="updateValue(this, '{{ audio_device }}-rec_level', 'audio');" />
+	</div>
+    </div>
+</div>
+{% endfor %}
+
 {% endblock %}
 
 {% block script %}
@@ -208,7 +223,7 @@ function toggleDisplay(device_section) {
     }
 }
 
-function updateValue(elem, val) {
+function updateValue(elem, val, type='video') {
     let elem_val = elem.value;
     if (elem.type == 'checkbox') {
         if (elem.name.endsWith('-exposure_auto')) {
@@ -225,25 +240,47 @@ function updateValue(elem, val) {
     if (key.indexOf('-range') > 0) {
         key = key.substring(0, key.indexOf('-range'));
     }
-    video_device = document.getElementById(serial + '-device').value;
-    let data = {
-        'serial': serial,
-        'video_device': video_device,
-        'settings': {
-            [key]: elem_val,
-        }
-    };
-    fetch('/api/video-device/' + serial, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-    })
-    .then(function(response) {
-        return response.json();
-    })
-    .then(function(json) {
-        console.log(json);
-    });
+    if (type == 'audio') {
+        console.log('updating audio device: ' + serial);
+        alsa_idx = document.getElementById(serial + '-alsa_idx').value;
+        let data = {
+            'alsa_idx': alsa_idx,
+            'rec_level': elem_val,
+        };
+        fetch('/api/audio-device/' + serial, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(json) {
+            console.log(json);
+        });
+    }
+    if (type == 'video') {
+        console.log('updating video device');
+        video_device = document.getElementById(serial + '-device').value;
+        let data = {
+            'serial': serial,
+            'video_device': video_device,
+            'settings': {
+                [key]: elem_val,
+            }
+        };
+        fetch('/api/video-device/' + serial, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(json) {
+            console.log(json);
+        });
+    }
 }
 
 function updateSettings(serial, video_device) {

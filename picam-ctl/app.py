@@ -49,9 +49,11 @@ class PicamConfig:
 app.picam_config = PicamConfig()
 
 from picam import (
-    index,
     admin,
+    audio,
     device,
+    index,
+    video,
     wifi,
 )
 
@@ -68,18 +70,23 @@ app.add_url_rule(
     '/devices', view_func=device.DevicesHandler.as_view('devices')
 )
 app.add_url_rule(
-    '/config-video-device/<serial>',
-    view_func=device.VideoDeviceHandler.as_view('config-video-device'),
+    '/config-audio-device/<serial>',
+    view_func=audio.AudioDeviceHandler.as_view('config-audio-device'),
     methods=['GET', 'POST', 'DELETE',]
 )
 app.add_url_rule(
-    '/config-audio-device/<serial>',
-    view_func=device.AudioDeviceHandler.as_view('config-audio-device'),
+    '/config-video-device/<serial>',
+    view_func=video.VideoDeviceHandler.as_view('config-video-device'),
     methods=['GET', 'POST', 'DELETE',]
+)
+app.add_url_rule(
+    '/api/audio-device/<serial>',
+    view_func=audio.AudioDeviceApiHandler.as_view('api-audio-device'),
+    methods=['POST']
 )
 app.add_url_rule(
     '/api/video-device/<serial>',
-    view_func=device.VideoDeviceApiHandler.as_view('api-video-device'),
+    view_func=video.VideoDeviceApiHandler.as_view('api-video-device'),
     methods=['POST']
 )
 app.add_url_rule(
@@ -125,11 +132,13 @@ app.add_url_rule(
 
 if __name__ == '__main__':
     import subprocess
+
     cpu_info = subprocess.run(
         ('grep', 'Raspberry Pi', '/proc/cpuinfo'),
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
+
     if cpu_info.returncode == 0:
         # Pi specific tweaks
         scaling_governor = app.picam_config.pi.get('scaling_governor', 'performance')
@@ -145,4 +154,5 @@ if __name__ == '__main__':
 
         if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
             subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
     app.run(host='0.0.0.0', threaded=True, debug=os.getenv('PICAM_DEBUG', False))
