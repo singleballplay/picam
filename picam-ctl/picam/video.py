@@ -188,6 +188,9 @@ def find_video_devices():
             # cam link does not report unique serial so set one
             serial = 'KIYOPRO'
         v4l2_options = get_v4l2_settings(device)
+        if serial in ('KIYOPRO', 'KIYOPROULTRA'):
+            v4l2_options.update({'exposure_time_absolute': {'min': 10}})
+            v4l2_options.update({'exposure_time_absolute': {'max': 156}})
         devices.update({
             device: {
                 'serial': serial,

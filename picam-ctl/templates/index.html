@@ -141,10 +141,10 @@
         </div>
         {% endif %}
 
-        {% if 'focus_automatic_continous' in device_settings['v4l2_options'] %}
+        {% if 'focus_automatic_continuous' in device_settings['v4l2_options'] %}
         <div class="video-control">
-            <label for="{{ video_device }}-focus_automatic_continous">Focus Continuous</label>
-            <input type="checkbox" name="{{ video_device }}-focus_automatic_continous" {{ 'checked' if device_settings['focus_automatic_continous'] == '1' }} id="{{ video_device }}-focus_automatic_continous" onchange="updateValue(this, '{{ video_device }}-focus_automatic_continous');"/>
+            <label for="{{ video_device }}-focus_automatic_continuous">Focus Continuous</label>
+            <input type="checkbox" name="{{ video_device }}-focus_automatic_continuous" {{ 'checked' if device_settings['focus_automatic_continuous'] == '1' }} id="{{ video_device }}-focus_automatic_continous" onchange="updateValue(this, '{{ video_device }}-focus_automatic_continous');"/>
         </div>
         {% endif %}
 
