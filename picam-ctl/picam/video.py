@@ -280,7 +280,7 @@ class VideoDeviceHandler(MethodView):
                     'framerate': framerate,
                     'encoding': encoding,
                 })
-                v4l2_settings.update({k: v['default'] for k, v in v4l2_options.items()})
+                v4l2_settings.update({k: v.get('default', None) for k, v in v4l2_options.items()})
             else:
                 if encoding == 'h264':
                     resolutions = video_options['H264'].keys()
