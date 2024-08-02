@@ -77,4 +77,7 @@ if [ ! -f "/lib/systemd/system/picam-ctl.service" ]; then
     sudo systemctl enable picam-ctl.service
 fi
 
+# adjust settings for networking
+sudo cp sysctl.conf /etc/sysctl.d/97-picam.conf
+
 echo "done"
