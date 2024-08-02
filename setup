@@ -55,13 +55,7 @@ do
     fi
 done
 
-# adjust settings for networking
-echo "adjusting netork settings"
-sudo cp sysctl.conf /etc/sysctl.d/97-picam.conf
-echo $?
-
 # configure nginx to redirect traffic to Flask app
-echo "setting up nginx site"
 sudo cp default-site /etc/nginx/sites-available/default
 
 if [ ! -f "/lib/systemd/system/picam.service" ]; then
