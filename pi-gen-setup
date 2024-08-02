@@ -37,6 +37,9 @@ do
     fi
 done
 
+# configure pi networking tweaks
+sudo cp sysctl.conf /etc/sysctl.d/local.conf
+
 # configure nginx to redirect traffic to Flask app
 sudo cp default-site /etc/nginx/sites-available/default
 
