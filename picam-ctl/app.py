@@ -5,6 +5,11 @@ import os
 
 from flask import Flask
 
+
+def setup_logging(flask_app):
+    flask_app.logger.setLevel(logging.INFO)
+
+
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.secret_key = 'picamsecret'
@@ -155,4 +160,5 @@ if __name__ == '__main__':
         if app.picam_config.pi.get('hdmi_power', 'off') == 'off':
             subprocess.run(('sudo', 'tvservice', '-o'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
+    setup_logging(app)
     app.run(host='0.0.0.0', threaded=True, debug=os.getenv('PICAM_DEBUG', False))

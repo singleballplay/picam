@@ -246,7 +246,7 @@ class VideoDeviceHandler(MethodView):
             if not device_config:
                 if 'H264' in encodings:
                     encoding = 'h264'
-                    resolutions = video_options['H264'].keys()
+                    resolutions = list(video_options['H264'].keys())
                     if resolution not in resolutions:
                         resolution = resolutions[0]
                         device_config.update({'resolution': resolutions[0]})
@@ -256,7 +256,7 @@ class VideoDeviceHandler(MethodView):
                         device_config.update({'framerate': framerate})
                 elif 'MJPG' in encodings:
                     encoding = 'mjpeg'
-                    resolutions = video_options['MJPG'].keys()
+                    resolutions = list(video_options['MJPG'].keys())
                     if resolution not in resolutions:
                         resolution = resolutions[0]
                         device_config.update({'resolution': resolutions[0]})
