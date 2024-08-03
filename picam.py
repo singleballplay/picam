@@ -153,7 +153,7 @@ def setup_pi_camera_device(video_device):
         'bitrate=10000000'
     ])
     launch=(
-        'v4l2src device={} extra-controls="c,{}" '
+        'v4l2src device={} do-timestamp=1 extra-controls="c,{}" '
         '! video/x-h264,width=1280,height=720,framerate=30/1,profile=main'
     ).format(video_device, camera_settings)
     pipeline = '( {} ! h264parse config-interval=2 ! rtph264pay name=pay0 pt=96 )'.format(launch)
@@ -197,7 +197,7 @@ def setup_uvc_device(serial, video_device, config_options):
             adjust_video_settings(video_device, '{}={}'.format(ctl, val))
     framerate = config_options.get('framerate', '30')
     width, height = config_options.get('resolution', '1280x720').split('x')
-    launch = 'v4l2src device={} io-mode=4 do-timestamp=0'.format(video_device)
+    launch = 'v4l2src device={} io-mode=4 do-timestamp=1'.format(video_device)
     if config_options['encoding'] == 'h264':
         if serial not in ['KIYOPRO', 'KIYOPROULTRA']:
             # better control over the iframe period, default is way too many seconds
@@ -344,7 +344,7 @@ def main():
             audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
         if audio_path:
             launch = (
-                'alsasrc device=hw:{alsa_idx} '
+                'alsasrc device=hw:{alsa_idx} do-timestamp=1 '
                 '! audio/x-raw,rate={audio_rate} '
                 '! queue ! voaacenc bitrate=160000 '
                 '! rtpmp4apay name=pay0 pt=96'
