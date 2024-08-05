@@ -1,18 +1,11 @@
-import logging
-import subprocess
-import json
-import re
-
 from flask import (
     current_app as app,
     render_template,
 )
 from flask.views import MethodView
 
-from picam.audio  import (
+from picam.audio import (
     find_audio_devices,
-    get_audio_device_settings,
-    get_current_recording_level,
 )
 from picam.video import (
     find_video_devices,
@@ -31,14 +24,16 @@ class IndexHandler(MethodView):
             device_settings = get_device_settings(video_device)
             if serial in video_configs.keys():
                 camera_path = video_configs[serial]['endpoint']
-                device_settings.update({
-                    'path': camera_path,
-                    'device': video_device,
-                    'type': video_configs[serial]['type'],
-                    'v4l2_options': device_info['v4l2_options'],
-                })
+                device_settings.update(
+                    {
+                        'path': camera_path,
+                        'device': video_device,
+                        'type': video_configs[serial]['type'],
+                        'v4l2_options': device_info['v4l2_options'],
+                    }
+                )
                 video_devices.update({serial: device_settings})
- 
+
         audio_devices = {}
         audio_configs = app.picam_config.audio_devices
         for serial, device_info in find_audio_devices().items():

@@ -22,13 +22,15 @@ def get_current_recording_level(card_idx):
         ('amixer', '-c', card_idx, 'sget', 'Mic'),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        check=False,
     )
-    if cmd.returncode != 0:
-        return '0'
-    for line in cmd.stdout.decode().strip().split('\n'):
-        if line.strip().startswith('Mono:'):
-            rec_level = re.findall('(-?\d+)%', line)
-            return rec_level[0] if rec_level else '0'
+    rec_level = '0'
+    if cmd.returncode == 0:
+        for line in cmd.stdout.decode().strip().split('\n'):
+            if line.strip().startswith('Mono:'):
+                matches = re.findall(r'(-?\d+)%', line)
+                rec_level = matches[0] if matches else '0'
+    return rec_level
 
 
 def adjust_audio_volume(card_idx, level):
@@ -48,7 +50,8 @@ def adjust_audio_volume(card_idx, level):
 def get_asound_devices(recordable_devices):
     cmd1 = subprocess.run(
         ('cat', '/proc/asound/cards'),
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
     )
     device_list = cmd1.stdout.decode().strip().split('\n')
     audio_devices = [d.strip() for d in device_list if d]
@@ -57,7 +60,7 @@ def get_asound_devices(recordable_devices):
     while idx < len(audio_devices):
         alsa_idx = audio_devices[idx].split(' ')[0]
         if alsa_idx in recordable_devices.keys():
-            devices.update({alsa_idx: audio_devices[idx +1]})
+            devices.update({alsa_idx: audio_devices[idx + 1]})
         idx += 2
     return devices
 
@@ -65,7 +68,8 @@ def get_asound_devices(recordable_devices):
 def get_recordable_devices():
     cmd1 = subprocess.run(
         ('arecord', '--list-devices'),
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
     )
     device_list = cmd1.stdout.decode().strip().split('\n')
     audio_devices = [d.strip() for d in device_list if d]
@@ -89,7 +93,7 @@ def get_recordable_devices():
     return devices
 
 
-def find_audio_devices(with_rates=False):
+def find_audio_devices(with_rates=False):  # pylint: disable=too-many-locals
     """
     Look at all of the usb sound devices available and create a dict with the alsa index based
     on the card id found and the serial if available.
@@ -104,13 +108,13 @@ def find_audio_devices(with_rates=False):
         stderr=subprocess.DEVNULL,
     )
     usb_devices = snd_cmd.stdout.decode().strip().split('\n')
-    card_idx_pattern = re.compile('/sound/card(\d+)/')
+    card_idx_pattern = re.compile(r'/sound/card(\d+)/')
     for usb_device in usb_devices:
         serial = None
         card_idx = None
         model = ''
         cmd1 = subprocess.run(
-            ('/bin/udevadm', 'info', '--name=/dev/snd/by-id/{}'.format(usb_device)),
+            ('/bin/udevadm', 'info', f'--name=/dev/snd/by-id/{usb_device}'),
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
         )
@@ -130,27 +134,30 @@ def find_audio_devices(with_rates=False):
             if with_rates:
                 for sample_rate in [32000, 44100, 48000]:
                     # test available audio rates checking with caps from gstreamer
+                    pipeline = (
+                        'gst-launch-1.0 alsasrc device=hw:{card_idx} num-buffers=10 '
+                        '! audio/x-raw,rate={sample_rate} '
+                        '! fakesink'
+                    ).format(card_idx=card_idx, sample_rate=sample_rate)
                     cmd = subprocess.run(
-                        f'gst-launch-1.0 alsasrc device=hw:{card_idx} num-buffers=10 ! audio/x-raw,rate={sample_rate} ! fakesink'.split(),
+                        pipeline.split(),
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                     )
                     if cmd.returncode == 0:
                         sample_rates.append(sample_rate)
             rec_level = get_current_recording_level(card_idx)
-            devices.update({
-                serial: {
-                    'alsa_idx': card_idx,
-                    'description': model,
-                    'rec_level': rec_level,
-                    'sample_rates': sample_rates,
+            devices.update(
+                {
+                    serial: {
+                        'alsa_idx': card_idx,
+                        'description': model,
+                        'rec_level': rec_level,
+                        'sample_rates': sample_rates,
+                    }
                 }
-            })
+            )
     return devices
-
-
-def get_audio_device_settings(audio_device):
-    return {}
 
 
 class AudioDeviceHandler(MethodView):
@@ -178,14 +185,14 @@ class AudioDeviceHandler(MethodView):
             return redirect('/devices')
 
         if not app.picam_config.audio_devices.get(serial):
-            app.picam_config.audio_devices[serial] = dict()
+            app.picam_config.audio_devices[serial] = {}
 
-        endpoint_url = request.form.get('{}-endpoint'.format(serial))
+        endpoint_url = request.form.get(f'{serial}-endpoint')
         if endpoint_url and not endpoint_url.startswith('/'):
             endpoint_url = '/' + endpoint_url
         app.picam_config.audio_devices[serial]['endpoint'] = endpoint_url
 
-        audio_rate = request.form.get('{}-audio_rate'.format(serial))
+        audio_rate = request.form.get(f'{serial}-audio_rate')
         if audio_rate:
             app.picam_config.audio_devices[serial]['audio_rate'] = int(audio_rate)
 
@@ -196,7 +203,9 @@ class AudioDeviceHandler(MethodView):
             app.picam_config.audio_devices[serial]['rec_level'] = int(rec_level)
 
         for config_option in ['type']:
-            app.picam_config.audio_devices[serial][config_option] = request.form.get('{}-{}'.format(serial, config_option))
+            app.picam_config.audio_devices[serial][config_option] = request.form.get(
+                '{}-{}'.format(serial, config_option)
+            )
 
         return redirect('/devices')
 
@@ -207,6 +216,7 @@ class AudioDeviceHandler(MethodView):
 
 class AudioDeviceApiHandler(MethodView):
     def post(self, serial):
+        app.logger('updating audio level for %s', serial)
         data = request.json
         adjust_audio_volume(data['alsa_idx'], data['rec_level'])
         return render_json({'status': 'ok'})

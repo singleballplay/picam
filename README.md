@@ -1,6 +1,10 @@
+# Introduction
+
+Picam allows UVC video and audio (ALSA) devices on a Debian based system, like the Raspberry Pi, to create RTSP streams for use in live streaming application. It was originallly developed as a low cost network camera solution to help live stream pinball. The project is a Python application using the Gstreamer RTSPServer and a Flask web application to manage the configurations as well as provide realtime configuration changes for available controls like recording level or V4L2 options (e.g. brightness, exposure, auto focus, etc).
+
 # Prebuilt Image
 
-For convenience, a prebuilt image is available. It is built using the pi-gen project to build a custom Raspbian Buster lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
+For convenience, a prebuilt image is available. It is built using the [pi-gen](https://github.com/aaronhanson/pi-gen/tree/picam) project to build a custom Raspberry Pi OS Lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. If you are using the Raspberry Pi Imager you can adjust the Wifi settings, hostname, username, etc. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
 
 Download [picam-v4.1.0.zip](https://drive.google.com/file/d/1VBOjTcpZNm-whi3T-vfK_K-lA2CjFx9N/view?usp=sharing)
 
@@ -12,12 +16,30 @@ IMPORTANT!
 
 If you have previously downloaded the Raspbian image from earlier than 2024 (v3.1.0), you will need to download this new image and config the picam again. I'll be working on a more seemless way to upgrade in the future. This version should support the Raspberry Pi 5 now.
 
+# Usage
 
-# OBS Sources
+Visit the UI available at http://hostname or http://hostname:5000. Follow the instructions to configure the available UVC video and audio devices available to the system. To save the configuration visit the 'admin' menu option and click the 'Write Config' button.
+
+## Accessing The Stream
+
+The services will run after the device powers up and use whatever cameras are available and should be accessible by the appropriate uri: rtsp://hostname:8554/playfield or rtsp://hostname:8554/backglass, etc. based on how you configured them.
+
+To test the stream on another computer you can run the following gstreamer pipeline and it should display the video:
+
+Example H.264 encoding:
+
+    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=100 ! queue ! rtph264depay ! avdec_h264 ! autovideosink
+
+Example MJPEG encoding:
+
+    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=100 ! queue ! rtpjpegdepay ! jpegdec ! autovideosink
+
+
+## OBS Sources
 
 To add them as sources in OBS I recommend adding the GStreamer plugin (https://github.com/fzwoch/obs-gstreamer) for the best results and configuration. While you can use the VLC or Media sources, they introduce too much latency to be usable and should be avoided.
 
-## Windows
+### Windows
 
 Download the obs-gstreamer.zip file from the latest release https://github.com/fzwoch/obs-gstreamer/releases and unzip it. Copy the obs-gstreamer.dll file in the windows folder to the plugins directory of OBS.
 
@@ -28,18 +50,19 @@ After installing the package, you will need to edit the Windows PATH environment
 
 ## Additional Notes
 
+### Logitech Brio/4K Pro
+
 If using a Logitech Brio/4K Pro, keep the exposure_auto setting at or below 200 to achieve full 60fps, use the gain setting instead to brighten up the image. Brightness and contrast can also do a bit there but don't over do those. On a USB 2.0 system the resolution is limited to 1280x720, if plugging into a USB 3.0+ port you should be able to run higher resolutions. You can use the zoom and pan/tilt settings to get closer if necessary and move the where the center is if zoomed in.
 
+### Logitech C920/C922
 If you are using a C920 for displays, consider bumping the exposure_auto setting to 300 or 400 to reduce the scan line effect and reduce the gain setting to compensate for the additional brightness. Play around with what works best.
-
-Consider running secondary cameras at a lower resolution if you are going to be composing them into a 1080p or 720p feed. That will save on bandwidth and CPU/GPU in the composition software like OBS. Again, play with it depending on the power of the streaming machine.
 
 
 # Install From Scratch
 
-## Install Raspbian
+## Install Raspberry Pi OS
 
-Grab the latest Raspbian "lite" image from https://www.raspberrypi.org/downloads/raspbian/. At the moment the current version is 2020-02-13-raspbian-buster-lite.zip. Unzip it locally so you have access to the .img file. Follow the instructions on the Raspberry Pi website to format the disk with the image so you have a fresh operating system.
+Grab the latest Raspberry Pi OS "Lite" image from https://www.raspberrypi.org/downloads/raspbian/. Unzip it locally so you have access to the .img file. Follow the instructions on the Raspberry Pi website to format the disk with the image so you have a fresh operating system.
 
 The following commands all assume a Linux operating system is being used. If you are on Windows you may need to adjust some of the commands. Feel free to use an editor of your choice instead of vi as well if you aren't familiar with it.
 
@@ -99,17 +122,3 @@ Run the setup script and you should be good to go. It will probably take a bit t
 
     $ ./setup
     $ sudo shutdown -r now
-
-## Accessing The Stream
-
-You should be good to go now. The service will run after the device powers up and use whatever cameras are available and should be accessible by the appropriate uri: rtsp://hostname:8554/playfield or rtsp://hostname:8554/backglass, etc. based on how you configured them.
-
-To test the stream on another computer you can run the following gstreamer pipeline and it should display the video:
-
-For H.264 encoding:
-
-    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=100 ! queue ! rtph264depay ! avdec_h264 ! autovideosink
-
-For MJPEG encoding:
-
-    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=100 ! queue ! rtpjpegdepay ! jpegdec ! autovideosink

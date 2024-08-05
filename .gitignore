@@ -2,3 +2,4 @@
 picam.yaml
 *.code-workspace
 .venv/
+poetry.lock

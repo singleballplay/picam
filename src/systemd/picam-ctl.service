@@ -1,0 +1,14 @@
+[Unit]
+Description=Picam Web UI
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/pi/picam/src
+Type=simple
+ExecStart=/usr/bin/python3 gunicorn wsgi:app
+StandardOutput=file:/var/log/picam.log
+StandardError=file:/var/log/picam.log
+
+[Install]
+WantedBy=default.target

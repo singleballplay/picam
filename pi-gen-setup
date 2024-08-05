@@ -30,31 +30,31 @@ else
 fi
 
 # convenience scripts called from web admin page
-for f in $(ls bin)
+echo "linking utility scripts"
+for f in $(ls src/bin)
 do
     if [ ! -f "/usr/local/bin/${f}" ]; then
-        sudo ln -s "/home/pi/picam/bin/${f}" "/usr/local/bin/${f}"
+        sudo ln -s "/home/pi/picam/src/bin/${f}" "/usr/local/bin/${f}"
     fi
 done
 
 # configure pi networking tweaks
-sudo cp sysctl.conf /etc/sysctl.d/local.conf
+sudo cp src/sysctl.d/local.conf /etc/sysctl.d/local.conf
 
 # configure nginx to redirect traffic to Flask app
-sudo cp default-site /etc/nginx/sites-available/default
+sudo cp src/nginx/default-site /etc/nginx/sites-available/default
 
 if [ ! -f "/lib/systemd/system/picam.service" ]; then
     # load the picamera/webcam rtsp service
-    sudo ln -s /home/pi/picam/services/picam.service /lib/systemd/system/picam.service
+    sudo ln -s /home/pi/picam/src/systemd/picam.service /lib/systemd/system/picam.service
 
     # run the service on startup
     sudo systemctl enable picam.service
 fi
 
-
 if [ ! -f "/lib/systemd/system/picam-ctl.service" ]; then
     # load the webcam control service
-    sudo ln -s /home/pi/picam/services/picam-ctl.service /lib/systemd/system/picam-ctl.service
+    sudo ln -s /home/pi/picam/src/systemd/picam-ctl.service /lib/systemd/system/picam-ctl.service
 
     # run the service on startup
     sudo systemctl enable picam-ctl.service

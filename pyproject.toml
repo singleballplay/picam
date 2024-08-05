@@ -1,0 +1,43 @@
+[tool.pylint]
+disable = [
+    'consider-using-with',
+    'consider-using-f-string',
+    'missing-module-docstring',
+    'missing-class-docstring',
+    'missing-function-docstring',
+    'subprocess-run-check',
+    'fixme',
+]
+# pylint throws warnings with gi inspection and this takes care of it
+init-hook="import gi; gi.require_version('Gst', '1.0'); from gi.repository import Gst; Gst.init()"
+
+[tool.pylint.messages_control]
+max-line-length = 120
+
+[tool.black]
+line-length = 100
+skip-string-normalization = true
+
+[tool.poetry]
+name = "picam"
+version = "4.1.0"
+description = "RTSP Media Service For UVC Devices And Audio Interfaces"
+authors = ["aaronhanson"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyyaml = "^6.0.1"
+flask = "^3.0.3"
+pygobject = "^3.48.2"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.8.0"
+pylint = "^3.2.6"
+gunicorn = "^22.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
