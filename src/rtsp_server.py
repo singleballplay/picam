@@ -301,10 +301,11 @@ def main():
             mounts.add_factory(mount_path, factory)
 
     # creates the audio streams
-    for alsa_idx, serial in audio.find_audio_devices().items():
+    audio_configs = configs['audio_devices']
+    for serial, device_info in audio.find_audio_devices().items():
         audio_rate = 32000
         audio_path = None
-        audio_configs = configs['audio_devices']
+        alsa_idx = device_info['alsa_idx']
         if serial in list(audio_configs.keys()):
             audio_path = audio_configs[serial]['endpoint']
             audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
@@ -319,6 +320,7 @@ def main():
                 audio_rate=audio_rate,
             )
             pipeline = '( {} )'.format(launch)
+            logging.info(pipeline)
             factory = GstRtspServer.RTSPMediaFactory()
             factory.set_launch(pipeline)
             factory.set_shared(True)
