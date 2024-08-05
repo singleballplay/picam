@@ -52,7 +52,7 @@ def check_for_new_version():
     )
     script_dir = os.path.dirname(__file__)
     cmd = subprocess.run(
-        f'git diff master origin/master {script_dir}/../../version.txt'.split(' '),
+        f'git diff master origin/master {script_dir}/../version.txt'.split(' '),
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
@@ -67,7 +67,7 @@ def check_for_new_version():
 def get_version():
     script_dir = os.path.dirname(__file__)
     cmd = subprocess.run(
-        f'cat {script_dir}/../../version.txt'.split(' '),
+        f'cat {script_dir}/../version.txt'.split(' '),
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
