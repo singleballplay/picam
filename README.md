@@ -6,9 +6,9 @@ Picam allows UVC video and audio (ALSA) devices on a Debian based system, like t
 
 For convenience, a prebuilt image is available. It is built using the [pi-gen](https://github.com/aaronhanson/pi-gen/tree/picam) project to build a custom Raspberry Pi OS Lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. If you are using the Raspberry Pi Imager you can adjust the Wifi settings, hostname, username, etc. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
 
-Download [picam-v4.1.0.zip](https://drive.google.com/file/d/1VBOjTcpZNm-whi3T-vfK_K-lA2CjFx9N/view?usp=sharing)
+Download [picam-v5.0.0.zip](https://drive.google.com/file/d/1edUIBP2RUdX48mVYVPyhLkFI9NXvtqTy/view?usp=sharing)
 
-SHA-256: 0ec929568e3a3e5f7db8bf47d20393364010cdbdccb2f0c7b6434c4118369c4d  picam.img
+SHA-256: 81c998901a4fb35e326d617c597d16f075ba7f4bab0b01cee734fbfe9225ae95  picam.img
 
 It is a good idea to visit the admin page in the website and run the 'Update Picam' to get the latest changes. The downloaded image will periodically be updated but not as frequently as the code. Restart after updating. Future versions will check for updates but that feature is not currently implemented.
 
