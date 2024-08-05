@@ -210,7 +210,7 @@ def find_video_devices():
 
 class VideoDeviceApiHandler(MethodView):
     def post(self, serial):
-        app.logging.info('updating video setting(s) for %s', serial)
+        app.logger.info('updating video setting(s) for %s', serial)
         data = request.json
         adjust_video_settings(data['video_device'], data['settings'])
         return render_json({'status': 'ok'})

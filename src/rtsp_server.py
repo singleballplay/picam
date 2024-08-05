@@ -305,7 +305,7 @@ def main():
         audio_rate = 32000
         audio_path = None
         audio_configs = configs['audio_devices']
-        if serial in audio_configs.keys():
+        if serial in list(audio_configs.keys()):
             audio_path = audio_configs[serial]['endpoint']
             audio_rate = audio_configs[serial].get('audio_rate', audio_rate)
         if audio_path:

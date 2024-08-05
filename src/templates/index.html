@@ -62,7 +62,16 @@
         <div class="video-control">
             <label for="{{ video_device }}-exposure_time_absolute">Exposure Time</label>
             <input type="number" min="{{ v4l2_options['exposure_time_absolute']['min'] }}" max="{{ v4l2_options['exposure_time_absolute']['max'] }}" step="{{ v4l2_options['exposure_time_absolute']['step'] }}" value="{{ device_settings['exposure_time_absolute'] }}" name="{{ video_device }}-exposure_time_absolute" id="{{ video_device }}-exposure_time_absolute" onchange="updateValue(this, '{{ video_device }}-exposure_time_absolute-range');" />
-            <input type="range" min="{{ v4l2_options['exposure_time_absolute']['min'] }}" max="{{ v4l2_options['exposure_time_absolute']['max'] }}" step="{{ v4l2_options['exposure_time_absolute']['step'] }}" value="{{ device_settings['exposure_time_absolute'] }}" name="{{ video_device }}-exposure_time_absolute-range" id="{{ video_device }}-exposure_time_absolute-range" oninput="updateValue(this, '{{ video_device }}-exposure_time_absolute');" />
+            <input type="range" list="exposure_ticks" min="{{ v4l2_options['exposure_time_absolute']['min'] }}" max="{{ v4l2_options['exposure_time_absolute']['max'] }}" step="{{ v4l2_options['exposure_time_absolute']['step'] }}" value="{{ device_settings['exposure_time_absolute'] }}" name="{{ video_device }}-exposure_time_absolute-range" id="{{ video_device }}-exposure_time_absolute-range" oninput="updateValue(this, '{{ video_device }}-exposure_time_absolute');" />
+            {% if video_device.startswith('KIYOPRO') %}
+            <datalist id="exposure_ticks">
+                <option value="10"></option>
+                <option value="20"></option>
+                <option value="39"></option>
+                <option value="78"></option>
+                <option value="156"></option>
+            </datalist>
+            {% endif %}
         </div>
         {% endif %}
 

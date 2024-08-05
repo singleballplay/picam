@@ -26,7 +26,7 @@ fi
 if [ -f "picam.yaml" ]; then
     echo "config file exists"
 else
-    cp picam.yaml.empty picam.yaml
+    cp src/picam.yaml.empty src/picam.yaml
 fi
 
 # convenience scripts called from web admin page
