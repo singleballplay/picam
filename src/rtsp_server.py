@@ -51,7 +51,7 @@ def adjust_video_settings(device, settings):
         device: the v4l2 device e.g. /dev/video0
         settings: the controls to change
     """
-    logging.info('adjusting %s for %s', device, settings)
+    logging.debug('adjusting %s for %s', device, settings)
     result = subprocess.run(
         [
             'v4l2-ctl',
@@ -141,7 +141,7 @@ def setup_vp8enc_pipeline(width, height, framerate):
 
 def setup_mjpeg_pipeline(width, height, framerate):
     return (
-        "image/jpeg,width={},height={},framerate={}/1 "
+        "image/jpeg,width={},height={},framerate={} "
         "! queue leaky=downstream "
         "! jpegparse "
         "! rtpjpegpay name=pay0 pt=26 "
