@@ -38,6 +38,11 @@ do
     fi
 done
 
+echo "linking cameractrls"
+if [ ! -f "/usr/local/bin/cameractrls.py" ]; then
+    sudo ln -s "/home/pi/cameractrls/cameractrls.py" "/usr/local/bin/cameractrls.py"
+fi
+
 # configure pi networking tweaks
 sudo cp src/sysctl.d/local.conf /etc/sysctl.d/local.conf
 

@@ -80,11 +80,20 @@ def adjust_video_settings(device, settings):
         device: the v4l2 device e.g. /dev/video0
         settings: the controls to change
     """
-    settings_str = ','.join(['{}={}'.format(k, v) for k, v in settings.items()])
-    app.logger.info('changing settings to: {}'.format(settings_str))
-    result = subprocess.run(['v4l2-ctl', '-d', device, '-c', settings_str])
-    if result.returncode != 0:
-        logging.error('non-zero return code changing webcam settings')
+    # special case for using cameractls to adjust a Razer Kiyo Pro Ultra
+    if len(settings) == 1 and 'exp_iso' in list(settings.keys()):
+        _, val = list(settings.items())[0]
+        subprocess.run(('cameractrls.py', '-d', device, '-c', f'kiyo_pro_ultra_iso={val}'))
+    elif len(settings) == 1 and 'exp_shutter' in list(settings.keys()):
+        _, val = list(settings.items())[0]
+        subprocess.run(('cameractrls.py', '-d', device, '-c', f'kiyo_pro_ultra_exp_shutter={val}'))
+    else:
+        # normal v4l2 control change
+        settings_str = ','.join(['{}={}'.format(k, v) for k, v in settings.items()])
+        app.logger.info('changing settings to: {}'.format(settings_str))
+        result = subprocess.run(['v4l2-ctl', '-d', device, '-c', settings_str])
+        if result.returncode != 0:
+            logging.error('non-zero return code changing webcam settings')
 
 
 def find_serial(device_name):
@@ -189,6 +198,10 @@ def find_video_devices():
         if serial in ('KIYOPRO', 'KIYOPROULTRA'):
             v4l2_options.update({'exposure_time_absolute': {'min': 10}})
             v4l2_options.update({'exposure_time_absolute': {'max': 156}})
+        if serial in ('KIYOPROULTRA'):
+            # add a psuedo property for exp_shutter speed and exp_iso
+            v4l2_options.update({'exp_shutter': {'default': 30}})
+            v4l2_options.update({'exp_iso': {'default': 400}})
         devices.update(
             {
                 device: {
@@ -366,7 +379,11 @@ class VideoDeviceHandler(MethodView):
                         ctl_val = 3
                     else:
                         ctl_val = 1
-                v4l2_settings[v4l2_ctl] = int(ctl_val)
+                # consider leaving all settings as strings
+                if v4l2_ctl in ['exp_shutter', 'exp_iso']:
+                    v4l2_settings[v4l2_ctl] = ctl_val
+                else:
+                    v4l2_settings[v4l2_ctl] = int(ctl_val)
             else:
                 # handle missing values as 'off' or 'manual'
                 auto_properties = (

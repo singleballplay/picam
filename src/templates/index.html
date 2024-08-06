@@ -96,6 +96,33 @@
         </div>
         {% endif %}
 
+        {% if video_device == 'KIYOPROULTRA' %}
+        {% if 'exp_iso' in v4l2_options %}
+        <div class="video-control">
+            <label for="{{ video_device }}-exp_iso">Exp iso</label>
+            <select name="{{ video_device }}-exp_iso" id="{{ video_device }}-exp_iso" onchange="updateValue(this, '{{ video_device }}-exp_iso');">
+                <option value="100" {{ 'selected' if device_settings['exp_iso'] == 100 else '' }}>100</option>
+                <option value="200" {{ 'selected' if device_settings['exp_iso'] == 200 else '' }}>200</option>
+                <option value="400" {{ 'selected' if device_settings['exp_iso'] == 400 else '' }}>400</option>
+                <option value="800" {{ 'selected' if device_settings['exp_iso'] == 800 else '' }}>800</option>
+            </select>
+        </div>
+        {% endif %}
+        {% if 'exp_shutter' in v4l2_options %}
+        <div class="video-control">
+            <label for="{{ video_device }}-exp_shutter">Exp Shutter</label>
+            <select name="{{ video_device }}-exp_shutter" id="{{ video_device }}-exp_shutter" onchange="updateValue(this, '{{ video_device }}-exp_shutter');">
+                <option value="1/24s" {{ 'selected' if device_settings['exp_shutter'] == '1/24s' else '' }}>1/24s</option>
+                <option value="1/30s" {{ 'selected' if device_settings['exp_shutter'] == '1/30s' else '' }}>1/30s</option>
+                <option value="1/48s" {{ 'selected' if device_settings['exp_shutter'] == '1/48s' else '' }}>1/48s</option>
+                <option value="1/60s" {{ 'selected' if device_settings['exp_shutter'] == '1/60s' else '' }}>1/60s</option>
+                <option value="1/90s" {{ 'selected' if device_settings['exp_shutter'] == '1/90s' else '' }}>1/90s</option>
+                <option value="1/120s" {{ 'selected' if device_settings['exp_shutter'] == '1/120s' else '' }}>1/120s</option>
+            </select>
+        </div>
+        {% endif %}
+        {% endif %}
+
         {% if 'brightness' in v4l2_options %}
         <div class="video-control">
             <label for="{{ video_device }}-brightness">Brightness</label>
@@ -240,6 +267,8 @@ function updateValue(elem, val, type='video') {
         } else {
             elem_val = elem.checked ? '1' : '0';
         }
+    } else if(elem.type == 'select-one') {
+        // no-op
     } else {
         document.getElementById(val).value = elem.value;
     }
