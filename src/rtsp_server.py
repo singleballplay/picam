@@ -7,6 +7,7 @@ import os
 import gi
 import yaml
 
+from fractions import Fraction
 from picam import (
     audio,
     video,
@@ -149,12 +150,10 @@ def setup_mjpeg_pipeline(width, height, framerate):
 
 
 def setup_x264enc_pipeline(width, height, framerate):
-    # scale video down to get enough performance out of the software encoder
-    # slight quality hit at the expense of latency
-    keyframe_interval = 2 * framerate
+    fraction = Fraction(framerate)
+    keyframe_interval = 2 * fraction.numerator
     return (
         "video/x-raw,width={width},height={height},framerate={framerate} "
-        "! videoscale ! video/x-raw,width=1024,height=576 "
         "! videoconvert ! video/x-raw,format=I420 "
         "! queue max-size-buffers=4 leaky=downstream "
         "! x264enc bitrate=5600 speed-preset=superfast tune=zerolatency key-int-max={keyframe_interval} "
