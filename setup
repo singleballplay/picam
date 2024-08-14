@@ -16,13 +16,14 @@ sudo apt install -y \
     gstreamer1.0-tools \
     gstreamer1.0-alsa \
     gstreamer1.0-libav \
+    chrony \
     nginx
 
 if [ "$(grep BCM2835 /proc/cpuinfo)" != "" ]; then
+    # Raspberry Pi specific things
+
     # support for pi hardware encoding of h264
     sudo apt install -y gstreamer1.0-omx
-
-    # Raspberry Pi specific things
 
     # ensure v4l2 can load the pi camera
     echo 'bcm2835-v4l2' | sudo tee /etc/modules-load.d/pi_camera_module.conf

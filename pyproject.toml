@@ -20,7 +20,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "picam"
-version = "4.1.0"
+version = "5.1.0"
 description = "RTSP Media Service For UVC Devices And Audio Interfaces"
 authors = ["aaronhanson"]
 license = "MIT"

@@ -240,7 +240,7 @@ def setup_uvc_device(serial, video_device, config_options):
                 video_device
             )
     video_format = (
-        "video/x-h264,width={},height={},framerate={}/1,profile=main "
+        "video/x-h264,width={},height={},framerate={},profile=main "
         "! h264parse config-interval=1 "
         "! rtph264pay name=pay0 pt=96 "
     ).format(width, height, framerate)

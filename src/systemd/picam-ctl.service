@@ -6,7 +6,7 @@ After=network-online.target
 [Service]
 WorkingDirectory=/home/pi/picam/src
 Type=simple
-ExecStart=gunicorn -b 0.0.0.0:5000 wsgi:app
+ExecStart=python3 -m gunicorn -b 0.0.0.0:5000 wsgi:app
 StandardOutput=file:/var/log/picam.log
 StandardError=file:/var/log/picam.log
 
