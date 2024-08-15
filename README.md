@@ -4,13 +4,11 @@ Picam allows UVC video and audio (ALSA) devices on a Debian based system, like t
 
 # Prebuilt Image
 
-For convenience, a prebuilt image is available. It is built using the [pi-gen](https://github.com/aaronhanson/pi-gen/tree/picam) project to build a custom Raspberry Pi OS Lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. If you are using the Raspberry Pi Imager you can adjust the Wifi settings, hostname, username, etc. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
+For convenience, a prebuilt image is available. It is built using the [pi-gen](https://github.com/aaronhanson/pi-gen/tree/picam) project to build a custom Raspberry Pi OS Lite image which already has the setup procedure completed. It also has SSH enabled and the hostname has been changed to *picam*. If you are using the [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#raspberry-pi-imager) you can adjust the Wifi settings, hostname, username, etc. After writing the image to a card, plug the device in with a networking cable and give it a moment to boot up and visit [http://picam:5000](http://picam:5000). You can configure the WiFi from there along with all of the other configuration of devices.
 
 Download [picam-v5.0.0.zip](https://drive.google.com/file/d/1edUIBP2RUdX48mVYVPyhLkFI9NXvtqTy/view?usp=sharing)
 
 SHA-256: 81c998901a4fb35e326d617c597d16f075ba7f4bab0b01cee734fbfe9225ae95  picam.img
-
-It is a good idea to visit the admin page in the website and run the 'Update Picam' to get the latest changes. The downloaded image will periodically be updated but not as frequently as the code. Restart after updating. Future versions will check for updates but that feature is not currently implemented.
 
 IMPORTANT!
 
@@ -18,7 +16,7 @@ If you have previously downloaded the Raspbian image from earlier than 2024 (v3.
 
 # Usage
 
-Visit the UI available at http://hostname or http://hostname:5000. Follow the instructions to configure the available UVC video and audio devices available to the system. To save the configuration visit the 'admin' menu option and click the 'Write Config' button.
+Visit the UI available at http://hostname or http://hostname:5000. Follow the instructions to configure the available UVC video and audio devices available to the system. To save the configuration visit the 'admin' menu option and click the 'Write Config' button. Then click the 'Restart Picam Service' to make the sources available for use.
 
 ## Accessing The Stream
 
@@ -28,12 +26,15 @@ To test the stream on another computer you can run the following gstreamer pipel
 
 Example H.264 encoding:
 
-    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=100 ! queue ! rtph264depay ! avdec_h264 ! autovideosink
+    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=200 ! rtph264depay ! avdec_h264 ! queue ! autovideosink
 
 Example MJPEG encoding:
 
-    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=100 ! queue ! rtpjpegdepay ! jpegdec ! autovideosink
+    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/playfield latency=200 ! rtpjpegdepay ! jpegdec ! queue ! autovideosink
 
+Example Audio:
+
+    $ gst-launch-1.0 rtspsrc location=rtsp://hostname:8554/mic1 latency=200 ! rtpmp4adepay ! avdec_aac ! audioconvert ! queue ! autoaudiosink
 
 ## OBS Sources
 
@@ -43,7 +44,8 @@ To add them as sources in OBS I recommend adding the GStreamer plugin (https://g
 
 Download the obs-gstreamer.zip file from the latest release https://github.com/fzwoch/obs-gstreamer/releases and unzip it. Copy the obs-gstreamer.dll file in the windows folder to the plugins directory of OBS.
 
-For Windows installations, the GStreamer MinGW 64-bit runtime is required and can be downloaded from the GStreamer website. https://gstreamer.freedesktop.org/data/pkg/windows/1.18.5/mingw/gstreamer-1.0-mingw-x86_64-1.18.5.msi
+For Windows installations, the GStreamer MinGW 64-bit runtime is required and can be downloaded from the GStreamer website.
+https://gstreamer.freedesktop.org/data/pkg/windows/1.24.6/mingw/gstreamer-1.0-mingw-x86_64-1.24.6.msi
 
 After installing the package, you will need to edit the Windows PATH environment variable for the OBS plugin to be able to find the necessary files. Assuming a default installation you should be able to add c:\gstreamer\1.0\mingw\bin to the user or system PATH variable.
 
@@ -55,8 +57,16 @@ After installing the package, you will need to edit the Windows PATH environment
 If using a Logitech Brio/4K Pro, keep the exposure_auto setting at or below 200 to achieve full 60fps, use the gain setting instead to brighten up the image. Brightness and contrast can also do a bit there but don't over do those. On a USB 2.0 system the resolution is limited to 1280x720, if plugging into a USB 3.0+ port you should be able to run higher resolutions. You can use the zoom and pan/tilt settings to get closer if necessary and move the where the center is if zoomed in.
 
 ### Logitech C920/C922
+
 If you are using a C920 for displays, consider bumping the exposure_auto setting to 300 or 400 to reduce the scan line effect and reduce the gain setting to compensate for the additional brightness. Play around with what works best.
 
+### Camlink / Razer Kiyo (Pro/Pro Ultra)
+
+Only one of these (of each model) can be configured at a time as they do not currently have serial numbers to identify them like other UVC devices.
+
+### Razer Kiyo (Pro/Pro Ultra)
+
+The exposure values are a little different from normal. The valid values to get various rough framerates are 10, 20, 39, 78. 39 seems to be very close to 1/120s shutter speed and 78 seems very close to 1/60s shutter. Compensate for exposure using the gain values.
 
 # Install From Scratch
 

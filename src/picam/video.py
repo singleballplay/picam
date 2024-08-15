@@ -227,7 +227,7 @@ class VideoDeviceHandler(MethodView):
         v4l2_settings = {}
         for v4l2_ctl in v4l2_options.keys():
             ctl_val = form.get('{}-{}'.format(serial, v4l2_ctl))
-            if ctl_val is not None:
+            if ctl_val is not None and ctl_val != '':
                 if ctl_val == 'on':
                     # not quite the best way to handle this generically
                     # exposure_auto seems to be deprecated?
