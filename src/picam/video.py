@@ -1,21 +1,12 @@
 import logging
-import subprocess
-import json
 import re
+import subprocess
 
-from flask import (
-    current_app as app,
-    request,
-    redirect,
-    render_template,
-)
+from flask import current_app as app
+from flask import redirect, render_template, request
 from flask.views import MethodView
 
-
-def render_json(json_data):
-    resp = app.make_response(json.dumps(json_data))
-    resp.headers['Content-type'] = 'application/json'
-    return resp
+from picam.utils import render_json
 
 
 def find_resolutions(device):
@@ -232,6 +223,45 @@ class VideoDeviceApiHandler(MethodView):
 class VideoDeviceHandler(MethodView):
     """Handler for video device CRUD"""
 
+    def _process_ctl_options(self, serial, form, v4l2_options):
+        v4l2_settings = {}
+        for v4l2_ctl in v4l2_options.keys():
+            ctl_val = form.get('{}-{}'.format(serial, v4l2_ctl))
+            if ctl_val is not None:
+                if ctl_val == 'on':
+                    # not quite the best way to handle this generically
+                    # exposure_auto seems to be deprecated?
+                    if v4l2_ctl in ['auto_exposure', 'exposure_auto']:
+                        # aperature priority
+                        ctl_val = 3
+                    else:
+                        # manual mode
+                        ctl_val = 1
+                # consider leaving all settings as strings
+                if v4l2_ctl in ['exp_shutter', 'exp_iso']:
+                    v4l2_settings[v4l2_ctl] = ctl_val
+                else:
+                    v4l2_settings[v4l2_ctl] = int(ctl_val)
+            else:
+                # handle missing values as 'off' or 'manual'
+                auto_properties = (
+                    'focus_auto',
+                    'focus_automatic_continuous',
+                    'white_balance_auto',
+                    'white_balance_automatic',
+                    'backlight_compensation',
+                    'exposure_auto_priority',
+                    'exposure_dynamic_framerate',
+                )
+                if v4l2_ctl in auto_properties:
+                    v4l2_settings[v4l2_ctl] = 0
+
+                # exposure_auto deprecated?
+                if v4l2_ctl in ['auto_exposure', 'exposure_auto']:
+                    # manual mode
+                    v4l2_settings[v4l2_ctl] = 1
+        return v4l2_settings
+
     # TODO revamp, this got a bit verbose
     def get(self, serial):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         v4l2_settings = {}
@@ -331,84 +361,53 @@ class VideoDeviceHandler(MethodView):
         }
         return render_template('config_video_device.html', **model)
 
-    def post(self, serial):  # pylint: disable=too-many-branches
+    def post(self, serial):
         if request.form.get('delete', None):
             del app.picam_config.video_devices[serial]
             return redirect('/devices')
+
         video_devices = find_video_devices()
+
         v4l2_options = {}
         for _, device_info in video_devices.items():
             if device_info['serial'] == serial:
                 v4l2_options = device_info['v4l2_options']
                 break
-        v4l2_settings = {}
-        # prune out the settings that aren't available
-        keys = list(v4l2_settings.keys())
-        for k in keys:
-            if k not in v4l2_options:
-                del v4l2_settings[k]
+
+        v4l2_settings = self._process_ctl_options(
+            serial,
+            request.form,
+            v4l2_options,
+        )
+
         if not app.picam_config.video_devices.get(serial):
             app.picam_config.video_devices[serial] = {}
+
         if not app.picam_config.video_devices.get('v4l2'):
             app.picam_config.video_devices[serial]['v4l2'] = {}
+
         endpoint_url = request.form.get('{}-endpoint'.format(serial))
         if endpoint_url and not endpoint_url.startswith('/'):
             endpoint_url = '/' + endpoint_url
         app.picam_config.video_devices[serial]['endpoint'] = endpoint_url
+
         framerate = request.form.get('{}-framerate'.format(serial))
         if framerate:
             if framerate != '59.940':
                 framerate = int(framerate)
             app.picam_config.video_devices[serial]['framerate'] = framerate
+
         for config_option in ['resolution', 'type', 'encoding']:
             app.picam_config.video_devices[serial][config_option] = request.form.get(
                 '{}-{}'.format(serial, config_option)
             )
-        for v4l2_ctl in v4l2_options.keys():
-            ctl_val = request.form.get('{}-{}'.format(serial, v4l2_ctl))
-            if ctl_val is not None:
-                if ctl_val == 'on':
-                    # not quite the best way to handle this generically
-                    if v4l2_ctl == 'auto_exposure':
-                        ctl_val = 3
-                    else:
-                        ctl_val = 1
 
-                    # deprecated property?
-                    if v4l2_ctl == 'exposure_auto':
-                        ctl_val = 3
-                    else:
-                        ctl_val = 1
-                # consider leaving all settings as strings
-                if v4l2_ctl in ['exp_shutter', 'exp_iso']:
-                    v4l2_settings[v4l2_ctl] = ctl_val
-                else:
-                    v4l2_settings[v4l2_ctl] = int(ctl_val)
-            else:
-                # handle missing values as 'off' or 'manual'
-                auto_properties = (
-                    'focus_auto',
-                    'focus_automatic_continuous',
-                    'white_balance_auto',
-                    'white_balance_automatic',
-                    'backlight_compensation',
-                    'exposure_auto_priority',
-                    'exposure_dynamic_framerate',
-                )
-                if v4l2_ctl in auto_properties:
-                    v4l2_settings[v4l2_ctl] = 0
-
-                if v4l2_ctl == 'auto_exposure':
-                    # manual mode
-                    v4l2_settings[v4l2_ctl] = 1
-
-                # deprecated property?
-                if v4l2_ctl == 'exposure_auto':
-                    # manual mode
-                    v4l2_settings[v4l2_ctl] = 1
         app.picam_config.video_devices[serial]['v4l2'].update(v4l2_settings)
+        app.picam_config.write_config()
+
         return redirect('/devices')
 
     def delete(self, serial):
         del app.picam_config.video_devices[serial]
+        app.picam_config.write_config()
         return render_json({"status": "ok"})

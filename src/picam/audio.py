@@ -1,13 +1,9 @@
-import subprocess
 import json
 import re
+import subprocess
 
-from flask import (
-    current_app as app,
-    request,
-    redirect,
-    render_template,
-)
+from flask import current_app as app
+from flask import redirect, render_template, request
 from flask.views import MethodView
 
 
@@ -206,6 +202,8 @@ class AudioDeviceHandler(MethodView):
             app.picam_config.audio_devices[serial][config_option] = request.form.get(
                 '{}-{}'.format(serial, config_option)
             )
+
+        app.picam_config.write_config()
 
         return redirect('/devices')
 

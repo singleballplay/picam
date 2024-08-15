@@ -1,16 +1,11 @@
 import os
-import subprocess
 import re
+import subprocess
 from functools import lru_cache
 
 import yaml
-
-from flask import (
-    url_for,
-    redirect,
-    render_template,
-    current_app as app,
-)
+from flask import current_app as app
+from flask import redirect, render_template, url_for
 from flask.views import MethodView
 
 

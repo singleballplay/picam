@@ -1,16 +1,9 @@
-from flask import (
-    current_app as app,
-    render_template,
-)
+from flask import current_app as app
+from flask import render_template
 from flask.views import MethodView
 
-from picam.audio import (
-    find_audio_devices,
-)
-from picam.video import (
-    find_video_devices,
-    get_device_settings,
-)
+from picam.audio import find_audio_devices
+from picam.video import find_video_devices, get_device_settings
 
 
 class IndexHandler(MethodView):

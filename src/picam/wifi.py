@@ -1,10 +1,6 @@
 import subprocess
 
-from flask import (
-    request,
-    redirect,
-    render_template,
-)
+from flask import redirect, render_template, request
 from flask.views import MethodView
 
 
